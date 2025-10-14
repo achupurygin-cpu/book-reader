@@ -335,7 +335,7 @@
 
         async function loadBook(bookId) {
             try {
-                const response = await fetch(`https://n8n.fignetic.ru/webhook/get-book-content?book_id=${bookId}`);
+                const response = await fetch(`https://n8n.fignetic.ru/webhook/d70fc88a-1b19-415a-bd56-95f094d46abe?book_id=${bookId}`);
                 
                 if (!response.ok) {
                     throw new Error('Не удалось загрузить книгу');
@@ -560,3 +560,4 @@
     </script>
 </body>
 </html>
+
