@@ -174,7 +174,7 @@
         async function loadBook(bookId) {
             try {
                 // ЗАМЕНИ ЭТО НА СВОЙ N8N ENDPOINT:
-                const response = await fetch(`https://YOUR-N8N-INSTANCE.app.n8n.cloud/webhook/get-book-content?book_id=${bookId}`);
+                const response = await fetch(`https://fignetic-n8n.ru/webhook/d70fc88a-1b19-415a-bd56-95f094d46abe?book_id=${bookId}`);
                 
                 if (!response.ok) {
                     throw new Error('Не удалось загрузить книгу');
@@ -291,3 +291,4 @@
     </script>
 </body>
 </html>
+
