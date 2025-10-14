@@ -123,14 +123,6 @@
             color: var(--tg-theme-text-color, #000);
         }
 
-        .page-number {
-            text-align: center;
-            padding: 20px;
-            font-size: 14px;
-            color: var(--tg-theme-hint-color, #999);
-            margin-top: 40px;
-        }
-
         .error {
             text-align: center;
             padding: 40px 20px;
@@ -320,10 +312,9 @@
 
         let currentPage = 0;
         let pages = [];
-        let chapterPageMap = []; // Карта: какая глава на какой странице начинается
+        let chapterPageMap = [];
         const WORDS_PER_PAGE = 300;
 
-        // Получаем book_id из параметров
         const urlParams = new URLSearchParams(window.location.search);
         const bookId = urlParams.get('book_id');
 
@@ -357,37 +348,31 @@
         function displayBook(book) {
             document.getElementById('bookTitle').textContent = book.title;
             
-            // Разбиваем текст на страницы
             pages = [];
             chapterPageMap = [];
             let currentPageText = '';
             let wordCount = 0;
             let pageNumber = 1;
 
-            book.chapters.forEach((chapter, chapterIndex) => {
-                // Начинаем новую страницу для каждой главы
+            book.chapters.forEach((chapter) => {
                 if (currentPageText.trim()) {
                     pages.push({
                         content: currentPageText,
-                        pageNumber: pageNumber++,
-                        chapterNumber: null
+                        pageNumber: pageNumber++
                     });
                     currentPageText = '';
                     wordCount = 0;
                 }
 
-                // Запоминаем, на какой странице начинается глава
                 chapterPageMap.push({
                     chapterNumber: chapter.chapter_number,
                     chapterTitle: chapter.title,
                     startPage: pageNumber
                 });
 
-                // Добавляем заголовок главы
                 const chapterTitle = `Глава ${chapter.chapter_number}. ${chapter.title}\n\n`;
                 currentPageText += chapterTitle;
 
-                // Разбиваем контент главы по абзацам
                 const paragraphs = chapter.content.split('\n\n');
                 
                 paragraphs.forEach(paragraph => {
@@ -400,8 +385,7 @@
                         if (wordCount >= WORDS_PER_PAGE) {
                             pages.push({
                                 content: currentPageText.trim(),
-                                pageNumber: pageNumber++,
-                                chapterNumber: chapter.chapter_number
+                                pageNumber: pageNumber++
                             });
                             currentPageText = '';
                             wordCount = 0;
@@ -412,19 +396,14 @@
                 });
             });
 
-            // Добавляем последнюю страницу
             if (currentPageText.trim()) {
                 pages.push({
                     content: currentPageText.trim(),
-                    pageNumber: pageNumber,
-                    chapterNumber: book.chapters[book.chapters.length - 1].chapter_number
+                    pageNumber: pageNumber
                 });
             }
 
-            // Отображаем оглавление
             displayTOC();
-
-            // Показываем первую страницу (оглавление)
             showTOC();
 
             document.getElementById('loading').style.display = 'none';
@@ -455,7 +434,7 @@
         function showTOC() {
             document.getElementById('toc').style.display = 'block';
             document.getElementById('bookContent').style.display = 'none';
-            currentPage = -1; // Оглавление
+            currentPage = -1;
             updateNavigation();
         }
 
@@ -473,25 +452,21 @@
             document.getElementById('toc').style.display = 'none';
             document.getElementById('bookContent').style.display = 'block';
 
+            // Убрали текст "Страница X из Y" внизу
             document.getElementById('bookContent').innerHTML = `
                 <div class="chapter">
                     <div class="chapter-content">${page.content}</div>
-                    <div class="page-number">Страница ${page.pageNumber} из ${pages.length}</div>
                 </div>
             `;
 
             updateNavigation();
-
-            // Прокручиваем наверх
             window.scrollTo(0, 0);
         }
 
         function updateNavigation() {
-            // Обновляем кнопки навигации
             document.getElementById('prevBtn').disabled = (currentPage === -1);
             document.getElementById('nextBtn').disabled = (currentPage === pages.length - 1);
 
-            // Обновляем отображение номера страницы
             if (currentPage === -1) {
                 document.getElementById('currentPageNumber').textContent = 'Оглавление';
                 document.getElementById('totalPages').textContent = '';
@@ -500,7 +475,6 @@
                 document.getElementById('totalPages').textContent = `из ${pages.length}`;
             }
 
-            // Обновляем max для input
             document.getElementById('pageJumpInput').max = pages.length;
         }
 
@@ -521,7 +495,7 @@
         }
 
         function openPageJumpModal() {
-            if (currentPage === -1) return; // Не открываем модал на оглавлении
+            if (currentPage === -1) return;
 
             document.getElementById('pageJumpModal').style.display = 'flex';
             document.getElementById('pageJumpInput').value = currentPage + 1;
@@ -544,14 +518,12 @@
             }
         }
 
-        // Закрываем модал при клике вне его
         document.getElementById('pageJumpModal').onclick = function(e) {
             if (e.target === this) {
                 closePageJumpModal();
             }
         };
 
-        // Enter для перехода
         document.getElementById('pageJumpInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 jumpToPage();
@@ -560,6 +532,3 @@
     </script>
 </body>
 </html>
-
-
-
