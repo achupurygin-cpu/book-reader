@@ -106,11 +106,6 @@
             background: var(--tg-theme-bg-color, #ffffff);
             padding: 12px 16px;
             border-top: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
-            display: none;
-        }
-
-        .button-container.visible {
-            display: block;
         }
 
         .btn {
@@ -150,8 +145,8 @@
 
     <!-- Одна кнопка ВНИЗУ -->
     <div class="button-container" id="buttonContainer">
-        <button class="btn" id="regenerateBtn">
-            Перегенерировать выбранных
+        <button class="btn" id="actionBtn">
+            Подтвердить
         </button>
     </div>
 
@@ -222,7 +217,7 @@
                 gallery.appendChild(card);
             });
 
-            updateButtons();
+            updateButton();
         }
 
         function toggleSelection(card, characterId) {
@@ -233,26 +228,33 @@
                 selectedCharacters.add(characterId);
                 card.classList.add('selected');
             }
-            updateButtons();
+            updateButton();
         }
 
-        function updateButtons() {
-            const buttonContainer = document.getElementById('buttonContainer');
-            const regenerateBtn = document.getElementById('regenerateBtn');
+        function updateButton() {
+            const actionBtn = document.getElementById('actionBtn');
 
             if (selectedCharacters.size > 0) {
-                buttonContainer.classList.add('visible');
-                regenerateBtn.textContent = `Перегенерировать выбранных (${selectedCharacters.size})`;
+                actionBtn.textContent = `Перегенерировать выбранных (${selectedCharacters.size})`;
             } else {
-                buttonContainer.classList.remove('visible');
+                actionBtn.textContent = 'Подтвердить';
             }
         }
 
-        document.getElementById('regenerateBtn').addEventListener('click', () => {
-            tg.sendData(JSON.stringify({
-                action: 'regenerate',
-                character_ids: Array.from(selectedCharacters)
-            }));
+        document.getElementById('actionBtn').addEventListener('click', () => {
+            if (selectedCharacters.size > 0) {
+                // Перегенерация выбранных персонажей
+                tg.sendData(JSON.stringify({
+                    action: 'regenerate',
+                    character_ids: Array.from(selectedCharacters)
+                }));
+            } else {
+                // Продолжить без изменений
+                tg.sendData(JSON.stringify({
+                    action: 'continue',
+                    book_id: bookId
+                }));
+            }
             tg.close();
         });
 
