@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Галерея персонажей</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -13,7 +13,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: var(--tg-theme-bg-color, #ffffff);
             color: var(--tg-theme-text-color, #000000);
             padding: 16px;
@@ -33,14 +33,14 @@
 
         .header p {
             font-size: 14px;
-            color: var(--tg-theme-hint-color, #999999);
+            opacity: 0.7;
         }
 
         .gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .character-card {
@@ -62,9 +62,9 @@
 
         .character-image {
             width: 100%;
-            height: 200px;
+            aspect-ratio: 3/4;
             object-fit: cover;
-            background: #e0e0e0;
+            display: block;
         }
 
         .character-info {
@@ -72,7 +72,7 @@
         }
 
         .character-name {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             margin-bottom: 4px;
             white-space: nowrap;
@@ -82,54 +82,68 @@
 
         .character-role {
             font-size: 12px;
-            color: var(--tg-theme-hint-color, #999999);
+            opacity: 0.7;
             text-transform: capitalize;
         }
 
-        .selected-indicator {
+        .selection-badge {
             position: absolute;
             top: 8px;
             right: 8px;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: white;
+            border-radius: 50%;
             width: 24px;
             height: 24px;
-            background: var(--tg-theme-button-color, #3390ec);
-            border-radius: 50%;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 16px;
-            opacity: 0;
-            transition: opacity 0.2s;
+            font-size: 14px;
+            font-weight: 600;
         }
 
-        .character-card.selected .selected-indicator {
-            opacity: 1;
+        .character-card.selected .selection-badge {
+            display: flex;
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
-            color: var(--tg-theme-hint-color, #999999);
+            padding: 40px 20px;
+            font-size: 16px;
+            opacity: 0.7;
         }
 
         .error {
             text-align: center;
-            padding: 40px;
+            padding: 40px 20px;
             color: #ff3b30;
         }
 
-        .actions {
+        .bottom-controls {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 12px 16px;
             background: var(--tg-theme-bg-color, #ffffff);
-            border-top: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            padding: 16px;
+            border-top: 1px solid var(--tg-theme-hint-color, #e5e5ea);
+            display: none;
+        }
+
+        .bottom-controls.visible {
+            display: block;
+        }
+
+        .selected-count {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .action-buttons {
             display: flex;
             gap: 8px;
-            z-index: 100;
         }
 
         .btn {
@@ -137,7 +151,7 @@
             padding: 12px;
             border: none;
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 500;
             cursor: pointer;
             transition: opacity 0.2s;
@@ -157,156 +171,170 @@
             color: var(--tg-theme-text-color, #000000);
         }
 
-        .btn-regenerate {
-            background: #ff9500;
-            color: #ffffff;
-            display: none;
-        }
-
-        .has-selection .btn-regenerate {
-            display: block;
+        @media (max-width: 480px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Выберите персонажей</h1>
-        <p id="subtitle">Загрузка...</p>
+        <h1>📚 Персонажи книги</h1>
+        <p>Выберите персонажей для регенерации</p>
     </div>
 
-    <div id="gallery" class="gallery">
+    <div id="content">
         <div class="loading">Загрузка персонажей...</div>
     </div>
 
-    <div class="actions">
-        <button class="btn btn-secondary" onclick="selectAll()">Выбрать всех</button>
-        <button class="btn btn-regenerate" onclick="regenerateSelected()">Перегенерировать</button>
-        <button class="btn btn-primary" onclick="confirmSelection()">Подтвердить</button>
+    <div class="bottom-controls" id="bottomControls">
+        <div class="selected-count" id="selectedCount">Выбрано: 0</div>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="clearSelection()">Сбросить</button>
+            <button class="btn btn-primary" onclick="regenerateSelected()">Регенерировать</button>
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready();
 
-        // ✅ ИСПРАВЛЕНО: Правильный URL webhook
-        const bookId = new URLSearchParams(window.location.search).get('book_id') || 1;
-        const telegramUserId = tg.initDataUnsafe?.user?.id || 123456789;
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookId = urlParams.get('book_id');
 
-        let characters = [];
         let selectedCharacters = new Set();
+        let characters = [];
 
-        // Маппинг ролей на русский
-        const roleNames = {
+        // Словарь перевода ролей
+        const roleTranslations = {
             'protagonist': 'Главный герой',
             'antagonist': 'Антагонист',
             'supporting': 'Второстепенный',
-            'mentor': 'Наставник',
-            'sidekick': 'Напарник',
-            'love_interest': 'Любовный интерес'
+            'minor': 'Эпизодический'
         };
 
         async function loadCharacters() {
+            if (!bookId) {
+                showError('Не указан ID книги');
+                return;
+            }
+
             try {
-                // ✅ ИСПРАВЛЕНО: Используем правильный URL с GET параметрами
-                const response = await fetch(`https://fignetic-n8n.ru/webhook/6845fca0-206d-49fe-9202-334f079d92f0?book_id=${bookId}`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+                const response = await fetch(`https://fignetic-n8n.ru/webhook/6845fca0-206d-49fe-9202-334f079d92f0?book_id=${bookId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки данных');
+                }
 
                 const data = await response.json();
                 characters = data.characters || [];
 
-                renderGallery();
-                updateSubtitle();
+                if (characters.length === 0) {
+                    showError('Персонажи не найдены');
+                    return;
+                }
+
+                renderCharacters();
             } catch (error) {
                 console.error('Error loading characters:', error);
-                document.getElementById('gallery').innerHTML = `
-                    <div class="error">Ошибка загрузки персонажей</div>
-                `;
+                showError('Не удалось загрузить персонажей');
             }
         }
 
-        function renderGallery() {
-            const gallery = document.getElementById('gallery');
+        function renderCharacters() {
+            const content = document.getElementById('content');
             
-            if (characters.length === 0) {
-                gallery.innerHTML = '<div class="loading">Персонажи не найдены</div>';
-                return;
-            }
+            const gallery = document.createElement('div');
+            gallery.className = 'gallery';
 
-            gallery.innerHTML = characters.map(char => `
-                <div class="character-card" data-id="${char.id}" onclick="toggleCharacter(${char.id})">
-                    <div class="selected-indicator">✓</div>
-                    <img src="${char.reference_image_url}" alt="${char.name}" class="character-image" onerror="this.src='https://via.placeholder.com/200x200/e0e0e0/666666?text=${encodeURIComponent(char.name)}'">
+            characters.forEach(character => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.dataset.characterId = character.id;
+                card.onclick = () => toggleCharacter(character.id);
+
+                // Переводим роль на русский
+                const roleRu = roleTranslations[character.role] || character.role;
+
+                card.innerHTML = `
+                    <img src="${character.image_url}" alt="${character.name}" class="character-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E?%3C/text%3E%3C/svg%3E'">
+                    <div class="selection-badge">✓</div>
                     <div class="character-info">
-                        <div class="character-name">${char.name}</div>
-                        <div class="character-role">${roleNames[char.role] || char.role}</div>
+                        <div class="character-name">${character.name}</div>
+                        <div class="character-role">${roleRu}</div>
                     </div>
-                </div>
-            `).join('');
-        }
+                `;
 
-        function toggleCharacter(charId) {
-            if (selectedCharacters.has(charId)) {
-                selectedCharacters.delete(charId);
-            } else {
-                selectedCharacters.add(charId);
-            }
-
-            const card = document.querySelector(`[data-id="${charId}"]`);
-            card.classList.toggle('selected', selectedCharacters.has(charId));
-
-            document.body.classList.toggle('has-selection', selectedCharacters.size > 0);
-            updateSubtitle();
-        }
-
-        function selectAll() {
-            characters.forEach(char => selectedCharacters.add(char.id));
-            
-            document.querySelectorAll('.character-card').forEach(card => {
-                card.classList.add('selected');
+                gallery.appendChild(card);
             });
 
-            document.body.classList.add('has-selection');
-            updateSubtitle();
+            content.innerHTML = '';
+            content.appendChild(gallery);
         }
 
-        function updateSubtitle() {
-            const subtitle = document.getElementById('subtitle');
-            if (selectedCharacters.size === 0) {
-                subtitle.textContent = `${characters.length} персонажей`;
+        function toggleCharacter(characterId) {
+            const card = document.querySelector(`[data-character-id="${characterId}"]`);
+            
+            if (selectedCharacters.has(characterId)) {
+                selectedCharacters.delete(characterId);
+                card.classList.remove('selected');
             } else {
-                subtitle.textContent = `Выбрано: ${selectedCharacters.size} из ${characters.length}`;
+                selectedCharacters.add(characterId);
+                card.classList.add('selected');
             }
+
+            updateBottomControls();
+        }
+
+        function updateBottomControls() {
+            const controls = document.getElementById('bottomControls');
+            const countElement = document.getElementById('selectedCount');
+            
+            if (selectedCharacters.size > 0) {
+                controls.classList.add('visible');
+                countElement.textContent = `Выбрано: ${selectedCharacters.size}`;
+            } else {
+                controls.classList.remove('visible');
+            }
+        }
+
+        function clearSelection() {
+            selectedCharacters.clear();
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            updateBottomControls();
         }
 
         function regenerateSelected() {
             if (selectedCharacters.size === 0) {
-                tg.showAlert('Выберите персонажей для перегенерации');
+                tg.showAlert('Выберите хотя бы одного персонажа');
                 return;
             }
 
+            const characterIds = Array.from(selectedCharacters);
+            
+            // Отправляем данные обратно в бот
             tg.sendData(JSON.stringify({
                 action: 'regenerate_characters',
                 book_id: bookId,
-                character_ids: Array.from(selectedCharacters)
+                character_ids: characterIds
             }));
-            
+
             tg.close();
         }
 
-        function confirmSelection() {
-            tg.sendData(JSON.stringify({
-                action: 'confirm_characters',
-                book_id: bookId,
-                selected_character_ids: Array.from(selectedCharacters)
-            }));
-            
-            tg.close();
+        function showError(message) {
+            const content = document.getElementById('content');
+            content.innerHTML = `<div class="error">${message}</div>`;
         }
 
-        // Запуск загрузки при открытии
+        // Настройка кнопок Telegram
+        tg.MainButton.text = "Регенерировать";
+        tg.MainButton.onClick(regenerateSelected);
+
+        // Загружаем персонажей при открытии
         loadCharacters();
     </script>
 </body>
