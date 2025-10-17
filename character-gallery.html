@@ -156,6 +156,10 @@
         tg.BackButton.show();
         tg.BackButton.onClick(() => tg.close());
 
+        // Получаем данные пользователя из Telegram WebApp
+        const userId = tg.initDataUnsafe?.user?.id || null;
+        const userName = tg.initDataUnsafe?.user?.first_name || 'User';
+        
         const urlParams = new URLSearchParams(window.location.search);
         const bookId = urlParams.get('book_id');
         let selectedCharacters = new Set();
@@ -241,21 +245,51 @@
             }
         }
 
-        document.getElementById('actionBtn').addEventListener('click', () => {
-            if (selectedCharacters.size > 0) {
-                // Перегенерация выбранных персонажей
-                tg.sendData(JSON.stringify({
-                    action: 'regenerate',
-                    character_ids: Array.from(selectedCharacters)
-                }));
-            } else {
-                // Продолжить без изменений
-                tg.sendData(JSON.stringify({
-                    action: 'continue',
-                    book_id: bookId
-                }));
+        document.getElementById('actionBtn').addEventListener('click', async () => {
+            const actionBtn = document.getElementById('actionBtn');
+            actionBtn.disabled = true;
+            actionBtn.textContent = 'Отправка...';
+
+            try {
+                const payload = {
+                    user_id: userId,
+                    book_id: bookId,
+                    action: selectedCharacters.size > 0 ? 'regenerate' : 'continue',
+                    character_ids: selectedCharacters.size > 0 ? Array.from(selectedCharacters) : [],
+                    telegram_data: {
+                        user: tg.initDataUnsafe?.user || {},
+                        chat: tg.initDataUnsafe?.chat || {}
+                    }
+                };
+
+                console.log('Отправка данных:', payload);
+
+                const response = await fetch('https://fignetic-n8n.ru/webhook/bb855bc5-ff94-4a4e-ad53-56f9497610f8', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Ответ сервера:', result);
+
+                // Показываем уведомление об успехе
+                tg.showAlert('Данные успешно отправлены!', () => {
+                    tg.close();
+                });
+
+            } catch (error) {
+                console.error('Ошибка отправки:', error);
+                tg.showAlert(`Ошибка: ${error.message}`);
+                actionBtn.disabled = false;
+                updateButton();
             }
-            tg.close();
         });
 
         loadCharacters();
