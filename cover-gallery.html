@@ -171,7 +171,9 @@
         tg.ready();
         tg.expand();
 
-        const WEBHOOK_URL = 'https://fignetic-n8n.ru/webhook/ccd382e4-7bac-4694-b9a6-1c26782d3ff7';
+        const GET_COVERS_URL = 'https://fignetic-n8n.ru/webhook/c535da09-89bc-4090-97ce-ac693bdc40e3';
+        const SELECT_COVER_URL = 'https://fignetic-n8n.ru/webhook/ccd382e4-7bac-4694-b9a6-1c26782d3ff7';
+        
         const urlParams = new URLSearchParams(window.location.search);
         const bookId = urlParams.get('book_id');
 
@@ -189,39 +191,7 @@
             }
 
             try {
-                // Временная заглушка - замени на реальный endpoint
-                const mockCovers = [
-                    {
-                        id: 1,
-                        s3_url: 'https://via.placeholder.com/400x600/3390ec/ffffff?text=Cover+1',
-                        prompt: 'Минималистичная обложка с геометрическими фигурами',
-                        generation_params: { style: 'minimalist' }
-                    },
-                    {
-                        id: 2,
-                        s3_url: 'https://via.placeholder.com/400x600/ff6b6b/ffffff?text=Cover+2',
-                        prompt: 'Реалистичная иллюстрация с портретом главного героя',
-                        generation_params: { style: 'realistic' }
-                    },
-                    {
-                        id: 3,
-                        s3_url: 'https://via.placeholder.com/400x600/4ecdc4/ffffff?text=Cover+3',
-                        prompt: 'Иллюстрированная обложка в стиле комикса',
-                        generation_params: { style: 'illustrated' }
-                    },
-                    {
-                        id: 4,
-                        s3_url: 'https://via.placeholder.com/400x600/ffe66d/ffffff?text=Cover+4',
-                        prompt: 'Кинематографическая композиция с драматичным освещением',
-                        generation_params: { style: 'cinematic' }
-                    }
-                ];
-
-                renderCovers(mockCovers);
-
-                // Раскомментируй, когда endpoint для получения обложек будет готов:
-                /*
-                const response = await fetch(`https://fignetic-n8n.ru/webhook/get-covers?book_id=${bookId}`);
+                const response = await fetch(`${GET_COVERS_URL}?book_id=${bookId}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to load covers');
@@ -229,13 +199,12 @@
 
                 const data = await response.json();
                 
-                if (!data.covers || data.covers.length === 0) {
+                if (!data.success || !data.covers || data.covers.length === 0) {
                     showError('❌ Обложки не найдены');
                     return;
                 }
 
                 renderCovers(data.covers);
-                */
             } catch (error) {
                 console.error('Error loading covers:', error);
                 showError('❌ Ошибка загрузки обложек');
@@ -254,7 +223,7 @@
                 'cinematic': 'Кинематограф'
             };
 
-            covers.forEach(cover => {
+            covers.forEach((cover, index) => {
                 const card = document.createElement('div');
                 card.className = 'cover-card';
                 card.onclick = () => toggleCover(cover.id, card);
@@ -265,7 +234,7 @@
                 card.innerHTML = `
                     <img src="${cover.s3_url}" alt="Cover ${cover.id}" class="cover-image" loading="lazy">
                     <div class="cover-info">
-                        <div class="cover-style">${styleNames[style] || style}</div>
+                        <div class="cover-style">${styleNames[style] || 'Вариант ' + (index + 1)}</div>
                         <div class="cover-prompt">${prompt}...</div>
                     </div>
                 `;
@@ -302,7 +271,7 @@
                     telegram_data: { user: userData }
                 };
 
-                const response = await fetch(WEBHOOK_URL, {
+                const response = await fetch(SELECT_COVER_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -335,7 +304,7 @@
                         telegram_data: { user: userData }
                     };
 
-                    const response = await fetch(WEBHOOK_URL, {
+                    const response = await fetch(SELECT_COVER_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
