@@ -14,469 +14,543 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            padding: 16px;
-            padding-bottom: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 30px;
         }
 
         .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         .header p {
-            font-size: 14px;
-            opacity: 0.6;
+            font-size: 16px;
+            opacity: 0.9;
         }
 
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 18px;
+            opacity: 0.9;
         }
 
-        .cover-card {
-            position: relative;
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            aspect-ratio: 2/3;
-        }
-
-        .cover-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-
-        .cover-card.selected {
-            border: 3px solid var(--tg-theme-button-color, #3390ec);
-            transform: scale(1.02);
-        }
-
-        .cover-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .cover-badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .selected-checkmark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background: var(--tg-theme-button-color, #3390ec);
-            border-radius: 50%;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .cover-card.selected .selected-checkmark {
-            display: flex;
-        }
-
-        /* 🔥 LOADING OVERLAY */
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-
-        .loading-overlay.active {
-            display: flex;
-        }
-
-        .spinner {
+        .loading::after {
+            content: '';
+            display: block;
             width: 40px;
             height: 40px;
-            border: 4px solid rgba(51, 144, 236, 0.2);
-            border-top-color: var(--tg-theme-button-color, #3390ec);
+            margin: 20px auto;
+            border: 4px solid rgba(255,255,255,0.3);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .loading-message {
-            text-align: center;
-            padding: 40px 20px;
-            font-size: 16px;
-            color: var(--tg-theme-hint-color, #999999);
+        .covers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
-        .error-message {
-            background: #fee;
-            color: #c33;
-            padding: 16px;
+        .cover-card {
+            position: relative;
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            aspect-ratio: 2/3;
+        }
+
+        .cover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .cover-card.selected {
+            border-color: #4ade80;
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+        }
+
+        .cover-card.loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .cover-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .cover-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 10px;
             border-radius: 12px;
-            margin-bottom: 16px;
-            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
-        .action-buttons {
+        .cover-loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .cover-card.loading .cover-loader {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
+        }
+
+        .cover-loader-text {
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(74, 222, 128, 0.95);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            z-index: 2;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.5);
+        }
+
+        .cover-card.selected .checkmark {
+            display: flex;
+        }
+
+        .actions {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 16px;
-            background: var(--tg-theme-bg-color, #ffffff);
-            border-top: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        }
+
+        .actions-container {
+            max-width: 800px;
+            margin: 0 auto;
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         .btn {
             flex: 1;
-            padding: 14px;
+            padding: 16px 24px;
             border: none;
             border-radius: 12px;
             font-size: 16px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .btn-regenerate {
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            color: var(--tg-theme-text-color, #000000);
+        .btn:active {
+            transform: scale(0.98);
         }
 
-        .btn-regenerate:active {
-            transform: scale(0.95);
-        }
-
-        .btn-confirm {
-            background: var(--tg-theme-button-color, #3390ec);
-            color: var(--tg-theme-button-text-color, #ffffff);
-        }
-
-        .btn-confirm:disabled {
+        .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .btn-confirm:active:not(:disabled) {
-            transform: scale(0.95);
+        .btn-regenerate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-regenerate:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-select {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+            display: none;
+        }
+
+        .btn-select.show {
+            display: flex;
+        }
+
+        .btn-select:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .covers-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .actions-container {
+                flex-direction: column;
+            }
+
+            .btn {
+                padding: 14px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🎨 Выберите обложку</h1>
-        <p>Выберите лучший вариант для вашей книги</p>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Выберите обложку</h1>
+            <p>Выберите лучший вариант для вашей книги</p>
+        </div>
+
+        <div id="loading" class="loading">
+            Загружаем обложки...
+        </div>
+
+        <div id="covers-grid" class="covers-grid" style="display: none;"></div>
     </div>
 
-    <div id="error-container"></div>
-    <div id="loading-message" class="loading-message" style="display: none;">
-        Загружаем обложки...
-    </div>
-
-    <div id="gallery" class="gallery"></div>
-
-    <div class="action-buttons">
-        <button id="btn-regenerate" class="btn btn-regenerate">
-            🔄 Пересоздать всё
-        </button>
-        <button id="btn-confirm" class="btn btn-confirm" disabled>
-            ✅ Выбрать
-        </button>
+    <div class="actions">
+        <div class="actions-container">
+            <button id="btn-regenerate" class="btn btn-regenerate">
+                <span>🔄 Пересоздать всё</span>
+            </button>
+            <button id="btn-select" class="btn btn-select">
+                <span>✅ Выбрать</span>
+            </button>
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.ready();
         tg.expand();
+        tg.ready();
 
-        const API_BASE = 'https://hook.eu2.make.com/your-webhook-url';
-        const bookId = tg.initDataUnsafe?.start_parameter || new URLSearchParams(window.location.search).get('book_id');
-        const telegramData = tg.initDataUnsafe;
+        const GET_COVERS_URL = 'https://fignetic-n8n.ru/webhook/c535da09-89bc-4090-97ce-ac693bdc40e3';
+        const SELECT_COVER_URL = 'https://fignetic-n8n.ru/webhook/ccd382e4-7bac-4694-b9a6-1c26782d3ff7';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookId = urlParams.get('book_id');
+        const userId = tg.initDataUnsafe?.user?.id;
 
         let selectedCoverId = null;
-        let isGenerating = false;
+        let isRegenerating = false;
         let pollingInterval = null;
 
-        // ✅ DOM ELEMENTS
-        const gallery = document.getElementById('gallery');
-        const loadingMessage = document.getElementById('loading-message');
-        const errorContainer = document.getElementById('error-container');
-        const btnRegenerate = document.getElementById('btn-regenerate');
-        const btnConfirm = document.getElementById('btn-confirm');
-
-        // ✅ FETCH COVERS
+        // Загрузка обложек
         async function loadCovers() {
             try {
-                loadingMessage.style.display = 'block';
-                gallery.innerHTML = '';
-                errorContainer.innerHTML = '';
-
-                const response = await fetch(`${API_BASE}/wf10-get-covers`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ book_id: bookId })
-                });
-
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                const data = await response.json();
-                
-                if (!data.covers || data.covers.length === 0) {
-                    throw new Error('Обложки не найдены');
-                }
-
-                renderCovers(data.covers);
-                loadingMessage.style.display = 'none';
-
-            } catch (error) {
-                console.error('Load error:', error);
-                showError('Ошибка загрузки обложек: ' + error.message);
-                loadingMessage.style.display = 'none';
-            }
-        }
-
-        // ✅ RENDER COVERS
-        function renderCovers(covers) {
-            gallery.innerHTML = '';
-            
-            covers.forEach(cover => {
-                const card = document.createElement('div');
-                card.className = 'cover-card';
-                card.dataset.coverId = cover.id;
-
-                card.innerHTML = `
-                    <img src="${cover.s3_url}" alt="Cover ${cover.version}" class="cover-image" loading="lazy">
-                    <div class="cover-badge">${getStyleName(cover.generation_params?.style)}</div>
-                    <div class="selected-checkmark">✓</div>
-                    <div class="loading-overlay">
-                        <div class="spinner"></div>
-                    </div>
-                `;
-
-                card.addEventListener('click', () => selectCover(cover.id));
-                gallery.appendChild(card);
-            });
-        }
-
-        // ✅ SELECT COVER
-        function selectCover(coverId) {
-            if (isGenerating) return;
-
-            selectedCoverId = coverId;
-            
-            // Update UI
-            document.querySelectorAll('.cover-card').forEach(card => {
-                card.classList.toggle('selected', card.dataset.coverId == coverId);
-            });
-
-            // ✅ REPLACE BUTTON
-            btnRegenerate.textContent = '🔄 Пересоздать';
-            btnRegenerate.style.flex = '0 0 auto';
-            btnRegenerate.style.minWidth = '48px';
-            btnConfirm.disabled = false;
-        }
-
-        // ✅ REGENERATE COVERS
-        async function handleRegenerate() {
-            if (isGenerating) return;
-
-            try {
-                isGenerating = true;
-                selectedCoverId = null;
-                btnConfirm.disabled = true;
-                
-                // ✅ SHOW LOADING ON ALL CARDS
-                document.querySelectorAll('.cover-card').forEach(card => {
-                    card.classList.remove('selected');
-                    const loadingOverlay = card.querySelector('.loading-overlay');
-                    if (loadingOverlay) {
-                        loadingOverlay.classList.add('active');
-                    }
-                });
-
-                // ✅ SEND REGENERATE REQUEST
-                const response = await fetch(`${API_BASE}/wf11-select-cover`, {
+                const response = await fetch(GET_COVERS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         book_id: bookId,
-                        action: 'regenerate',
-                        telegram_data: telegramData
+                        user_id: userId,
+                        telegram_data: tg.initDataUnsafe
                     })
                 });
 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                const result = await response.json();
+                const data = await response.json();
                 
-                if (!result.success) {
-                    throw new Error(result.message || 'Ошибка перегенерации');
+                if (!data.success || !data.covers || data.covers.length === 0) {
+                    throw new Error('Обложки не найдены');
                 }
 
-                // ✅ START POLLING
-                startPolling();
-
+                displayCovers(data.covers);
             } catch (error) {
-                console.error('Regenerate error:', error);
-                showError('Ошибка перегенерации: ' + error.message);
-                
-                // Remove loading overlays on error
-                document.querySelectorAll('.loading-overlay').forEach(overlay => {
-                    overlay.classList.remove('active');
-                });
-                
-                isGenerating = false;
+                console.error('Error loading covers:', error);
+                document.getElementById('loading').innerHTML = '❌ Ошибка загрузки обложек';
             }
         }
 
-        // ✅ START POLLING
+        // Отображение обложек
+        function displayCovers(covers) {
+            document.getElementById('loading').style.display = 'none';
+            const grid = document.getElementById('covers-grid');
+            grid.style.display = 'grid';
+            
+            // Обновляем только если карточек нет или количество изменилось
+            if (grid.children.length !== covers.length) {
+                grid.innerHTML = '';
+                
+                covers.forEach((cover, index) => {
+                    const card = createCoverCard(cover, index);
+                    grid.appendChild(card);
+                });
+            } else {
+                // Обновляем изображения в существующих карточках
+                covers.forEach((cover, index) => {
+                    const card = grid.children[index];
+                    const img = card.querySelector('.cover-image');
+                    if (img && img.src !== cover.s3_url) {
+                        img.src = cover.s3_url;
+                        card.classList.remove('loading');
+                    }
+                });
+            }
+        }
+
+        // Создание карточки обложки
+        function createCoverCard(cover, index) {
+            const card = document.createElement('div');
+            card.className = 'cover-card';
+            card.dataset.coverId = cover.id;
+            
+            const styleNames = {
+                'minimalist': 'Минимализм',
+                'realistic': 'Реализм',
+                'illustrated': 'Иллюстрация',
+                'cinematic': 'Кино'
+            };
+            
+            card.innerHTML = `
+                <img src="${cover.s3_url}" alt="${cover.style}" class="cover-image">
+                <div class="cover-badge">${styleNames[cover.style] || cover.style}</div>
+                <div class="checkmark">✓</div>
+                <div class="cover-loader">
+                    <div class="spinner"></div>
+                    <div class="cover-loader-text">Генерируем<br>обложку...</div>
+                </div>
+            `;
+
+            card.addEventListener('click', () => selectCover(cover.id));
+            
+            return card;
+        }
+
+        // Выбор обложки
+        function selectCover(coverId) {
+            if (isRegenerating) return;
+
+            document.querySelectorAll('.cover-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            const selected = document.querySelector(`[data-cover-id="${coverId}"]`);
+            if (selected) {
+                selected.classList.add('selected');
+                selectedCoverId = coverId;
+                
+                // Показываем кнопку "Выбрать"
+                document.getElementById('btn-select').classList.add('show');
+                document.getElementById('btn-regenerate').style.display = 'none';
+            }
+        }
+
+        // Подтверждение выбора
+        async function confirmSelection() {
+            if (!selectedCoverId) return;
+
+            document.getElementById('btn-select').disabled = true;
+            
+            try {
+                const response = await fetch(SELECT_COVER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'select',
+                        book_id: bookId,
+                        cover_id: selectedCoverId,
+                        user_id: userId,
+                        telegram_data: tg.initDataUnsafe
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    tg.close();
+                } else {
+                    throw new Error(data.message || 'Ошибка сохранения');
+                }
+            } catch (error) {
+                console.error('Error confirming:', error);
+                alert('Ошибка при сохранении обложки');
+                document.getElementById('btn-select').disabled = false;
+            }
+        }
+
+        // Перегенерация всех обложек
+        async function regenerateAll() {
+            if (isRegenerating) return;
+
+            isRegenerating = true;
+            document.getElementById('btn-regenerate').disabled = true;
+            
+            // Показываем загрузку на всех карточках
+            document.querySelectorAll('.cover-card').forEach(card => {
+                card.classList.add('loading');
+                card.classList.remove('selected');
+            });
+
+            selectedCoverId = null;
+
+            try {
+                const response = await fetch(SELECT_COVER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'regenerate',
+                        book_id: bookId,
+                        user_id: userId,
+                        telegram_data: tg.initDataUnsafe
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Запускаем polling для получения новых обложек
+                    startPolling();
+                } else {
+                    throw new Error(data.message || 'Ошибка перегенерации');
+                }
+            } catch (error) {
+                console.error('Error regenerating:', error);
+                alert('Ошибка при перегенерации обложек');
+                document.querySelectorAll('.cover-card').forEach(card => {
+                    card.classList.remove('loading');
+                });
+                isRegenerating = false;
+                document.getElementById('btn-regenerate').disabled = false;
+            }
+        }
+
+        // Polling для получения новых обложек
         function startPolling() {
-            if (pollingInterval) clearInterval(pollingInterval);
+            let pollCount = 0;
+            const maxPolls = 60; // 2 минуты максимум
 
             pollingInterval = setInterval(async () => {
+                pollCount++;
+
                 try {
-                    const response = await fetch(`${API_BASE}/wf10-get-covers`, {
+                    const response = await fetch(GET_COVERS_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ book_id: bookId })
+                        body: JSON.stringify({
+                            book_id: bookId,
+                            user_id: userId,
+                            telegram_data: tg.initDataUnsafe
+                        })
                     });
-
-                    if (!response.ok) return;
 
                     const data = await response.json();
                     
-                    if (data.covers && data.covers.length > 0) {
-                        // ✅ CHECK IF ALL NEW COVERS HAVE NEW TIMESTAMPS
-                        const allNew = data.covers.every(cover => {
-                            const createdAt = new Date(cover.created_at).getTime();
-                            const now = Date.now();
-                            return (now - createdAt) < 120000; // Less than 2 minutes old
-                        });
-
-                        if (allNew) {
+                    if (data.success && data.covers && data.covers.length > 0) {
+                        // Проверяем, обновились ли обложки
+                        const firstCover = data.covers[0];
+                        const firstCard = document.querySelector('.cover-card');
+                        const currentImg = firstCard?.querySelector('.cover-image')?.src;
+                        
+                        if (currentImg !== firstCover.s3_url) {
+                            // Обложки обновились!
+                            displayCovers(data.covers);
                             stopPolling();
-                            renderCovers(data.covers);
-                            isGenerating = false;
-                            
-                            // ✅ RESTORE BUTTON
-                            btnRegenerate.textContent = '🔄 Пересоздать всё';
-                            btnRegenerate.style.flex = '1';
-                            btnRegenerate.style.minWidth = 'auto';
                         }
                     }
-
                 } catch (error) {
                     console.error('Polling error:', error);
                 }
-            }, 2000); // Check every 2 seconds
+
+                // Останавливаем polling после максимального количества попыток
+                if (pollCount >= maxPolls) {
+                    stopPolling();
+                    alert('Время ожидания истекло. Попробуйте перезагрузить страницу.');
+                }
+            }, 2000); // Каждые 2 секунды
         }
 
-        // ✅ STOP POLLING
+        // Остановка polling
         function stopPolling() {
             if (pollingInterval) {
                 clearInterval(pollingInterval);
                 pollingInterval = null;
             }
+            
+            document.querySelectorAll('.cover-card').forEach(card => {
+                card.classList.remove('loading');
+            });
+            
+            isRegenerating = false;
+            document.getElementById('btn-regenerate').disabled = false;
         }
 
-        // ✅ CONFIRM SELECTION
-        async function handleConfirm() {
-            if (!selectedCoverId || isGenerating) return;
+        // Event listeners
+        document.getElementById('btn-regenerate').addEventListener('click', regenerateAll);
+        document.getElementById('btn-select').addEventListener('click', confirmSelection);
 
-            try {
-                btnConfirm.disabled = true;
-                btnConfirm.textContent = 'Сохраняем...';
-
-                const response = await fetch(`${API_BASE}/wf11-select-cover`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        book_id: bookId,
-                        cover_id: selectedCoverId,
-                        action: 'select',
-                        telegram_data: telegramData
-                    })
-                });
-
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    tg.close();
-                } else {
-                    throw new Error(result.message || 'Ошибка сохранения');
-                }
-
-            } catch (error) {
-                console.error('Confirm error:', error);
-                showError('Ошибка сохранения: ' + error.message);
-                btnConfirm.disabled = false;
-                btnConfirm.textContent = '✅ Выбрать';
-            }
-        }
-
-        // ✅ HELPER FUNCTIONS
-        function getStyleName(style) {
-            const styleNames = {
-                'minimalist': '✨ Минимализм',
-                'realistic': '📷 Реализм',
-                'illustrated': '🎨 Иллюстрация',
-                'cinematic': '🎬 Кино'
-            };
-            return styleNames[style] || '🎨 Обложка';
-        }
-
-        function showError(message) {
-            errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
-        }
-
-        // ✅ EVENT LISTENERS
-        btnRegenerate.addEventListener('click', handleRegenerate);
-        btnConfirm.addEventListener('click', handleConfirm);
-
-        // ✅ LOAD INITIAL COVERS
-        if (bookId) {
-            loadCovers();
+        // Инициализация
+        if (!bookId) {
+            document.getElementById('loading').innerHTML = '❌ ID книги не найден';
         } else {
-            showError('❌ ID книги не указан');
+            loadCovers();
         }
 
-        // ✅ CLEANUP ON CLOSE
+        // Очистка при закрытии
         window.addEventListener('beforeunload', () => {
             stopPolling();
         });
