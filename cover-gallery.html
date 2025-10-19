@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Выберите обложку</title>
+    <title>Выбор обложки</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -14,50 +14,46 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px 20px 100px 20px;
-            color: #fff;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            padding-bottom: 80px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
         }
 
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .header p {
-            font-size: 16px;
-            opacity: 0.9;
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999);
         }
 
         .loading {
             text-align: center;
             padding: 60px 20px;
-            font-size: 18px;
-            opacity: 0.9;
         }
 
-        .loading::after {
-            content: '';
-            display: block;
-            width: 40px;
-            height: 40px;
-            margin: 20px auto;
-            border: 4px solid rgba(255,255,255,0.3);
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-top-color: var(--tg-theme-button-color, #3390ec);
             border-radius: 50%;
-            border-top-color: #fff;
             animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
         }
 
         @keyframes spin {
@@ -67,136 +63,97 @@
         .covers-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-bottom: 24px;
         }
 
         .cover-card {
             position: relative;
-            background: rgba(255,255,255,0.1);
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 3px solid transparent;
             aspect-ratio: 2/3;
         }
 
-        .cover-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        .cover-card.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cover-card .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0;
         }
 
         .cover-card.selected {
-            border-color: #4ade80;
-            box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
-        }
-
-        .cover-card.loading {
-            pointer-events: none;
+            outline: 3px solid var(--tg-theme-button-color, #3390ec);
+            outline-offset: -3px;
         }
 
         .cover-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block;
         }
 
-        .cover-badge {
+        .cover-overlay {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            z-index: 10;
-        }
-
-        .cover-loader {
-            position: absolute;
-            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 20;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            padding: 12px;
+            color: white;
         }
 
-        .cover-card.loading .cover-loader {
-            display: flex;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s linear infinite;
-        }
-
-        .cover-loader-text {
-            font-size: 13px;
-            font-weight: 500;
-            text-align: center;
-            opacity: 0.9;
-            line-height: 1.4;
+        .cover-style {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .checkmark {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50px;
-            height: 50px;
-            background: rgba(74, 222, 128, 0.95);
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            background: var(--tg-theme-button-color, #3390ec);
             border-radius: 50%;
             display: none;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            z-index: 15;
-            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.5);
+            color: white;
+            font-size: 16px;
         }
 
         .cover-card.selected .checkmark {
             display: flex;
         }
 
-        .actions {
+        .bottom-buttons {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            z-index: 100;
+            padding: 12px 16px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            display: flex;
+            gap: 12px;
         }
 
-        .actions-container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 16px 24px;
+        .button {
+            flex: 1;
+            padding: 14px 20px;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -206,356 +163,307 @@
             gap: 8px;
         }
 
-        .btn:active {
-            transform: scale(0.98);
+        .button-regenerate {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #000);
         }
 
-        .btn:disabled {
+        .button-regenerate:active {
+            opacity: 0.7;
+        }
+
+        .button-select {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .button-select:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .btn-regenerate {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .button-select:not(:disabled):active {
+            opacity: 0.8;
         }
 
-        .btn-regenerate:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-select {
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-            color: white;
+        .regenerating-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
             display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
 
-        .btn-select.show {
+        .regenerating-overlay.active {
             display: flex;
         }
 
-        .btn-select:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+        .regenerating-content {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            max-width: 300px;
         }
 
-        @media (max-width: 768px) {
-            .covers-grid {
-                gap: 15px;
-            }
+        .regenerating-content .loading-spinner {
+            margin: 0 auto 20px;
+        }
 
-            .header h1 {
-                font-size: 24px;
-            }
+        .regenerating-content h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
 
-            .btn {
-                padding: 14px 20px;
-            }
+        .regenerating-content p {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎨 Выберите обложку</h1>
-            <p>Выберите лучший вариант для вашей книги</p>
-        </div>
-
-        <div id="loading" class="loading">
-            Загружаем обложки...
-        </div>
-
-        <div id="covers-grid" class="covers-grid" style="display: none;"></div>
+    <div class="header">
+        <div class="header-icon">🎨</div>
+        <h1>Выберите обложку</h1>
+        <p>Выберите лучший вариант для вашей книги</p>
     </div>
 
-    <div class="actions">
-        <div class="actions-container">
-            <button id="btn-regenerate" class="btn btn-regenerate">
-                <span>🔄 Перегенерировать всё</span>
-            </button>
-            <button id="btn-select" class="btn btn-select">
-                <span>✅ Выбрать</span>
-            </button>
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>Загружаем обложки...</p>
+    </div>
+
+    <div class="covers-grid" id="coversGrid" style="display: none;"></div>
+
+    <div class="bottom-buttons">
+        <button class="button button-regenerate" id="regenerateBtn">
+            <span>🔄</span>
+            <span>Пересоздать всё</span>
+        </button>
+        <button class="button button-select" id="selectBtn" disabled>
+            <span>✅</span>
+            <span>Выбрать</span>
+        </button>
+    </div>
+
+    <div class="regenerating-overlay" id="regeneratingOverlay">
+        <div class="regenerating-content">
+            <div class="loading-spinner"></div>
+            <h3>Создаём новые обложки...</h3>
+            <p>Это займёт ~30 секунд</p>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready();
+        tg.BackButton.show();
+        tg.BackButton.onClick(() => tg.close());
 
-        const GET_COVERS_URL = 'https://fignetic-n8n.ru/webhook/c535da09-89bc-4090-97ce-ac693bdc40e3';
-        const SELECT_COVER_URL = 'https://fignetic-n8n.ru/webhook/ccd382e4-7bac-4694-b9a6-1c26782d3ff7';
-
+        const API_BASE = 'https://fignetic-n8n.ru/webhook';
+        const GET_COVERS_URL = `${API_BASE}/c535da09-89bc-4090-97ce-ac693bdc40e3`;
+        const SELECT_COVER_URL = `${API_BASE}/ccd382e4-7bac-4694-b9a6-1c26782d3ff7`;
+        
         const urlParams = new URLSearchParams(window.location.search);
         const bookId = urlParams.get('book_id');
-        const userId = tg.initDataUnsafe?.user?.id;
+        const userId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
 
         let selectedCoverId = null;
         let isRegenerating = false;
         let pollingInterval = null;
 
-        // Загрузка обложек
+        const styleNames = {
+            minimalism: 'Минимализм',
+            realism: 'Реализм',
+            '3d': '3D Рендер',
+            watercolor: 'Акварель'
+        };
+
         async function loadCovers() {
             try {
-                const response = await fetch(GET_COVERS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        book_id: bookId,
-                        user_id: userId,
-                        telegram_data: tg.initDataUnsafe
-                    })
-                });
-
+                const response = await fetch(`${GET_COVERS_URL}?book_id=${bookId}`);
                 const data = await response.json();
-                
-                if (!data.success || !data.covers || data.covers.length === 0) {
-                    throw new Error('Обложки не найдены');
-                }
 
-                displayCovers(data.covers);
+                if (data.success && data.covers && data.covers.length > 0) {
+                    displayCovers(data.covers);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('coversGrid').style.display = 'grid';
+                    
+                    if (isRegenerating) {
+                        stopPolling();
+                        hideRegeneratingOverlay();
+                        tg.showAlert('✅ Новые обложки готовы!');
+                    }
+                } else if (!isRegenerating) {
+                    throw new Error('No covers found');
+                }
             } catch (error) {
                 console.error('Error loading covers:', error);
-                document.getElementById('loading').innerHTML = '❌ Ошибка загрузки обложек';
+                if (!isRegenerating) {
+                    tg.showAlert('Ошибка загрузки обложек');
+                }
             }
         }
 
-        // Отображение обложек
         function displayCovers(covers) {
-            document.getElementById('loading').style.display = 'none';
-            const grid = document.getElementById('covers-grid');
-            grid.style.display = 'grid';
-            
-            // Если уже есть карточки, обновляем только изображения
-            if (grid.children.length === covers.length) {
-                covers.forEach((cover, index) => {
-                    const card = grid.children[index];
-                    const img = card.querySelector('.cover-image');
-                    if (img && img.src !== cover.s3_url) {
-                        img.src = cover.s3_url;
-                        card.classList.remove('loading');
-                    }
-                });
-            } else {
-                // Создаём новые карточки
-                grid.innerHTML = '';
-                covers.forEach((cover, index) => {
-                    const card = createCoverCard(cover, index);
-                    grid.appendChild(card);
-                });
-            }
+            const grid = document.getElementById('coversGrid');
+            grid.innerHTML = '';
+
+            covers.forEach(cover => {
+                const card = document.createElement('div');
+                card.className = 'cover-card';
+                card.dataset.coverId = cover.id;
+
+                const styleName = cover.generation_params?.style || 'unknown';
+                const displayStyle = styleNames[styleName] || styleName;
+
+                card.innerHTML = `
+                    <img src="${cover.s3_url}" alt="Cover" class="cover-image">
+                    <div class="cover-overlay">
+                        <div class="cover-style">${displayStyle}</div>
+                    </div>
+                    <div class="checkmark">✓</div>
+                `;
+
+                card.addEventListener('click', () => selectCover(cover.id));
+                grid.appendChild(card);
+            });
         }
 
-        // Создание карточки обложки
-        function createCoverCard(cover, index) {
-            const card = document.createElement('div');
-            card.className = 'cover-card';
-            card.dataset.coverId = cover.id;
-            
-            const styleNames = {
-                'minimalist': 'Минимализм',
-                'realistic': 'Реализм',
-                'illustrated': 'Иллюстрация',
-                'cinematic': 'Кино'
-            };
-            
-            card.innerHTML = `
-                <img src="${cover.s3_url}" alt="${cover.style}" class="cover-image">
-                <div class="cover-badge">${styleNames[cover.style] || cover.style}</div>
-                <div class="checkmark">✓</div>
-                <div class="cover-loader">
-                    <div class="spinner"></div>
-                    <div class="cover-loader-text">Генерируем<br>обложку...</div>
-                </div>
-            `;
-
-            card.addEventListener('click', () => selectCover(cover.id));
-            
-            return card;
-        }
-
-        // Выбор обложки
         function selectCover(coverId) {
-            if (isRegenerating) return;
-
-            // Снимаем выделение со всех карточек
+            selectedCoverId = coverId;
+            
             document.querySelectorAll('.cover-card').forEach(card => {
                 card.classList.remove('selected');
             });
             
-            // Выделяем выбранную
-            const selected = document.querySelector(`[data-cover-id="${coverId}"]`);
-            if (selected) {
-                selected.classList.add('selected');
-                selectedCoverId = coverId;
-                
-                // Показываем кнопку "Выбрать", скрываем "Перегенерировать"
-                document.getElementById('btn-select').classList.add('show');
-                document.getElementById('btn-regenerate').style.display = 'none';
+            const selectedCard = document.querySelector(`[data-cover-id="${coverId}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
             }
+            
+            document.getElementById('selectBtn').disabled = false;
         }
 
-        // Подтверждение выбора
         async function confirmSelection() {
             if (!selectedCoverId) return;
 
-            document.getElementById('btn-select').disabled = true;
-            
             try {
                 const response = await fetch(SELECT_COVER_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
+                        book_id: parseInt(bookId),
+                        user_id: parseInt(userId),
                         action: 'select',
-                        book_id: bookId,
-                        cover_id: selectedCoverId,
-                        user_id: userId,
+                        cover_id: parseInt(selectedCoverId),
                         telegram_data: tg.initDataUnsafe
                     })
                 });
 
                 const data = await response.json();
-                
+
                 if (data.success) {
-                    tg.close();
+                    tg.showAlert('✅ Обложка выбрана!', () => {
+                        tg.close();
+                    });
                 } else {
-                    throw new Error(data.message || 'Ошибка сохранения');
+                    throw new Error(data.message || 'Selection failed');
                 }
             } catch (error) {
-                console.error('Error confirming:', error);
-                alert('Ошибка при сохранении обложки');
-                document.getElementById('btn-select').disabled = false;
+                console.error('Error selecting cover:', error);
+                tg.showAlert('Ошибка выбора обложки');
             }
         }
 
-        // Перегенерация всех обложек
-        async function regenerateAll() {
+        async function regenerateCovers() {
             if (isRegenerating) return;
 
-            isRegenerating = true;
-            document.getElementById('btn-regenerate').disabled = true;
-            
-            // Показываем загрузку НА ВСЕХ карточках
-            document.querySelectorAll('.cover-card').forEach(card => {
-                card.classList.add('loading');
-                card.classList.remove('selected');
+            const confirmed = await new Promise(resolve => {
+                tg.showConfirm(
+                    'Пересоздать все обложки?\n\nТекущие варианты будут удалены.',
+                    resolve
+                );
             });
 
-            selectedCoverId = null;
+            if (!confirmed) return;
+
+            isRegenerating = true;
+            showRegeneratingOverlay();
 
             try {
                 const response = await fetch(SELECT_COVER_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
+                        book_id: parseInt(bookId),
+                        user_id: parseInt(userId),
                         action: 'regenerate',
-                        book_id: bookId,
-                        user_id: userId,
                         telegram_data: tg.initDataUnsafe
                     })
                 });
 
                 const data = await response.json();
-                
+
                 if (data.success) {
-                    // Запускаем polling для получения новых обложек
+                    showLoadingCovers();
                     startPolling();
                 } else {
-                    throw new Error(data.message || 'Ошибка перегенерации');
+                    throw new Error(data.message || 'Regeneration failed');
                 }
             } catch (error) {
-                console.error('Error regenerating:', error);
-                alert('Ошибка при перегенерации обложек');
-                document.querySelectorAll('.cover-card').forEach(card => {
-                    card.classList.remove('loading');
-                });
+                console.error('Error regenerating covers:', error);
+                hideRegeneratingOverlay();
                 isRegenerating = false;
-                document.getElementById('btn-regenerate').disabled = false;
+                tg.showAlert('Ошибка перегенерации обложек');
             }
         }
 
-        // Polling для получения новых обложек
-        function startPolling() {
-            let pollCount = 0;
-            const maxPolls = 60; // 2 минуты максимум
-            let previousUrls = new Set();
-
-            // Сохраняем текущие URL
-            document.querySelectorAll('.cover-image').forEach(img => {
-                previousUrls.add(img.src);
-            });
-
-            pollingInterval = setInterval(async () => {
-                pollCount++;
-
-                try {
-                    const response = await fetch(GET_COVERS_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            book_id: bookId,
-                            user_id: userId,
-                            telegram_data: tg.initDataUnsafe
-                        })
-                    });
-
-                    const data = await response.json();
-                    
-                    if (data.success && data.covers && data.covers.length > 0) {
-                        // Проверяем, изменились ли URL обложек
-                        const newUrls = data.covers.map(c => c.s3_url);
-                        const hasChanged = newUrls.some(url => !previousUrls.has(url));
-                        
-                        if (hasChanged) {
-                            // Обложки обновились!
-                            displayCovers(data.covers);
-                            stopPolling();
-                        }
-                    }
-                } catch (error) {
-                    console.error('Polling error:', error);
-                }
-
-                // Останавливаем polling после максимального количества попыток
-                if (pollCount >= maxPolls) {
-                    stopPolling();
-                    alert('Время ожидания истекло. Попробуйте перезагрузить страницу.');
-                }
-            }, 2000); // Каждые 2 секунды
+        function showRegeneratingOverlay() {
+            document.getElementById('regeneratingOverlay').classList.add('active');
         }
 
-        // Остановка polling
+        function hideRegeneratingOverlay() {
+            document.getElementById('regeneratingOverlay').classList.remove('active');
+        }
+
+        function showLoadingCovers() {
+            const grid = document.getElementById('coversGrid');
+            grid.innerHTML = '';
+            grid.style.display = 'grid';
+            
+            for (let i = 0; i < 4; i++) {
+                const card = document.createElement('div');
+                card.className = 'cover-card loading';
+                card.innerHTML = '<div class="loading-spinner"></div>';
+                grid.appendChild(card);
+            }
+        }
+
+        function startPolling() {
+            pollingInterval = setInterval(() => {
+                loadCovers();
+            }, 2000);
+        }
+
         function stopPolling() {
             if (pollingInterval) {
                 clearInterval(pollingInterval);
                 pollingInterval = null;
             }
-            
-            document.querySelectorAll('.cover-card').forEach(card => {
-                card.classList.remove('loading');
-            });
-            
             isRegenerating = false;
-            document.getElementById('btn-regenerate').disabled = false;
         }
 
-        // Event listeners
-        document.getElementById('btn-regenerate').addEventListener('click', regenerateAll);
-        document.getElementById('btn-select').addEventListener('click', confirmSelection);
+        document.getElementById('selectBtn').addEventListener('click', confirmSelection);
+        document.getElementById('regenerateBtn').addEventListener('click', regenerateCovers);
 
-        // Инициализация
-        if (!bookId) {
-            document.getElementById('loading').innerHTML = '❌ ID книги не найден';
-        } else {
-            loadCovers();
-        }
-
-        // Очистка при закрытии
-        window.addEventListener('beforeunload', () => {
-            stopPolling();
-        });
+        loadCovers();
     </script>
 </body>
 </html>
