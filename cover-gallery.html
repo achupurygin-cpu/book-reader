@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Выбор обложки</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -25,6 +25,11 @@
             margin-bottom: 24px;
         }
 
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
         .header h1 {
             font-size: 24px;
             font-weight: 600;
@@ -36,68 +41,18 @@
             color: var(--tg-theme-hint-color, #999);
         }
 
-        .covers-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .cover-card {
-            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
-            border-radius: 16px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 3px solid transparent;
-        }
-
-        .cover-card.selected {
-            border-color: var(--tg-theme-button-color, #3390ec);
-            box-shadow: 0 4px 12px rgba(51, 144, 236, 0.3);
-        }
-
-        .cover-image {
-            width: 100%;
-            aspect-ratio: 2/3;
-            object-fit: cover;
-            display: block;
-        }
-
-        .cover-info {
-            padding: 12px;
-        }
-
-        .cover-style {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--tg-theme-hint-color, #999);
-            margin-bottom: 4px;
-        }
-
-        .cover-prompt {
-            font-size: 13px;
-            line-height: 1.4;
-            color: var(--tg-theme-text-color, #000);
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
         .loading {
             text-align: center;
-            padding: 40px 20px;
+            padding: 60px 20px;
         }
 
         .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--tg-theme-hint-color, #ddd);
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--tg-theme-hint-color, #e0e0e0);
             border-top-color: var(--tg-theme-button-color, #3390ec);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 1s linear infinite;
             margin: 0 auto 16px;
         }
 
@@ -105,10 +60,80 @@
             to { transform: rotate(360deg); }
         }
 
-        .error {
-            text-align: center;
-            padding: 40px 20px;
-            color: #ff3b30;
+        .covers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .cover-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            aspect-ratio: 2/3;
+        }
+
+        .cover-card.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cover-card .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0;
+        }
+
+        .cover-card.selected {
+            outline: 3px solid var(--tg-theme-button-color, #3390ec);
+            outline-offset: -3px;
+        }
+
+        .cover-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cover-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            padding: 12px;
+            color: white;
+        }
+
+        .cover-style {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            background: var(--tg-theme-button-color, #3390ec);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .cover-card.selected .checkmark {
+            display: flex;
         }
 
         .bottom-buttons {
@@ -116,219 +141,328 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: var(--tg-theme-bg-color, #fff);
             padding: 12px 16px;
-            border-top: 1px solid var(--tg-theme-hint-color, #ddd);
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
             display: flex;
-            gap: 8px;
+            gap: 12px;
         }
 
-        .btn {
+        .button {
             flex: 1;
-            padding: 14px;
+            padding: 14px 20px;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .btn-primary {
+        .button-regenerate {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #000);
+        }
+
+        .button-regenerate:active {
+            opacity: 0.7;
+        }
+
+        .button-select {
             background: var(--tg-theme-button-color, #3390ec);
-            color: var(--tg-theme-button-text-color, #fff);
+            color: var(--tg-theme-button-text-color, #ffffff);
         }
 
-        .btn-primary:disabled {
+        .button-select:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .btn-secondary {
-            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
-            color: var(--tg-theme-text-color, #000);
+        .button-select:not(:disabled):active {
+            opacity: 0.8;
+        }
+
+        .regenerating-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .regenerating-overlay.active {
+            display: flex;
+        }
+
+        .regenerating-content {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .regenerating-content .loading-spinner {
+            margin: 0 auto 20px;
+        }
+
+        .regenerating-content h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .regenerating-content p {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999);
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🎨 Выберите обложку</h1>
+        <div class="header-icon">🎨</div>
+        <h1>Выберите обложку</h1>
         <p>Выберите лучший вариант для вашей книги</p>
     </div>
 
-    <div id="coversContainer" class="loading">
+    <div class="loading" id="loading">
         <div class="loading-spinner"></div>
         <p>Загружаем обложки...</p>
     </div>
 
+    <div class="covers-grid" id="coversGrid" style="display: none;"></div>
+
     <div class="bottom-buttons">
-        <button class="btn btn-secondary" onclick="regenerateAll()">🔄 Пересоздать всё</button>
-        <button class="btn btn-primary" id="selectBtn" onclick="selectCover()" disabled>✅ Выбрать</button>
+        <button class="button button-regenerate" id="regenerateBtn">
+            <span>🔄</span>
+            <span>Пересоздать всё</span>
+        </button>
+        <button class="button button-select" id="selectBtn" disabled>
+            <span>✅</span>
+            <span>Выбрать</span>
+        </button>
+    </div>
+
+    <div class="regenerating-overlay" id="regeneratingOverlay">
+        <div class="regenerating-content">
+            <div class="loading-spinner"></div>
+            <h3>Создаём новые обложки...</h3>
+            <p>Это займёт ~30 секунд</p>
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.ready();
         tg.expand();
+        tg.BackButton.show();
+        tg.BackButton.onClick(() => tg.close());
 
-        const GET_COVERS_URL = 'https://fignetic-n8n.ru/webhook/c535da09-89bc-4090-97ce-ac693bdc40e3';
-        const SELECT_COVER_URL = 'https://fignetic-n8n.ru/webhook/ccd382e4-7bac-4694-b9a6-1c26782d3ff7';
+        const API_BASE = 'https://n8n.fignetic.ru/webhook';
+        const GET_COVERS_URL = `${API_BASE}/c535da09-89bc-4090-97ce-ac693bdc40e3`;
+        const SELECT_COVER_URL = `${API_BASE}/ccd382e4-7bac-4694-b9a6-1c26782d3ff7`;
         
         const urlParams = new URLSearchParams(window.location.search);
         const bookId = urlParams.get('book_id');
+        const userId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
 
         let selectedCoverId = null;
-        let userData = null;
+        let isRegenerating = false;
+        let pollingInterval = null;
 
-        if (tg.initDataUnsafe?.user) {
-            userData = tg.initDataUnsafe.user;
-        }
+        const styleNames = {
+            minimalism: 'Минимализм',
+            realism: 'Реализм',
+            '3d': '3D Рендер',
+            watercolor: 'Акварель'
+        };
 
         async function loadCovers() {
-            if (!bookId) {
-                showError('❌ Не указан ID книги');
-                return;
-            }
-
             try {
                 const response = await fetch(`${GET_COVERS_URL}?book_id=${bookId}`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load covers');
-                }
-
                 const data = await response.json();
-                
-                if (!data.success || !data.covers || data.covers.length === 0) {
-                    showError('❌ Обложки не найдены');
-                    return;
-                }
 
-                renderCovers(data.covers);
+                if (data.success && data.covers && data.covers.length > 0) {
+                    displayCovers(data.covers);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('coversGrid').style.display = 'grid';
+                    
+                    if (isRegenerating) {
+                        stopPolling();
+                        hideRegeneratingOverlay();
+                        tg.showAlert('✅ Новые обложки готовы!');
+                    }
+                } else if (!isRegenerating) {
+                    throw new Error('No covers found');
+                }
             } catch (error) {
                 console.error('Error loading covers:', error);
-                showError('❌ Ошибка загрузки обложек');
+                if (!isRegenerating) {
+                    tg.showAlert('Ошибка загрузки обложек');
+                }
             }
         }
 
-        function renderCovers(covers) {
-            const container = document.getElementById('coversContainer');
-            container.className = 'covers-grid';
-            container.innerHTML = '';
+        function displayCovers(covers) {
+            const grid = document.getElementById('coversGrid');
+            grid.innerHTML = '';
 
-            const styleNames = {
-                'minimalist': 'Минимализм',
-                'realistic': 'Реализм',
-                'illustrated': 'Иллюстрация',
-                'cinematic': 'Кинематограф'
-            };
-
-            covers.forEach((cover, index) => {
+            covers.forEach(cover => {
                 const card = document.createElement('div');
                 card.className = 'cover-card';
-                card.onclick = () => toggleCover(cover.id, card);
+                card.dataset.coverId = cover.id;
 
-                const style = cover.generation_params?.style || 'unknown';
-                const prompt = cover.prompt?.substring(0, 150) || 'Промпт недоступен';
+                const styleName = cover.generation_params?.style || 'unknown';
+                const displayStyle = styleNames[styleName] || styleName;
 
                 card.innerHTML = `
-                    <img src="${cover.s3_url}" alt="Cover ${cover.id}" class="cover-image" loading="lazy">
-                    <div class="cover-info">
-                        <div class="cover-style">${styleNames[style] || 'Вариант ' + (index + 1)}</div>
-                        <div class="cover-prompt">${prompt}...</div>
+                    <img src="${cover.s3_url}" alt="Cover" class="cover-image">
+                    <div class="cover-overlay">
+                        <div class="cover-style">${displayStyle}</div>
                     </div>
+                    <div class="checkmark">✓</div>
                 `;
 
-                container.appendChild(card);
+                card.addEventListener('click', () => selectCover(cover.id));
+                grid.appendChild(card);
             });
         }
 
-        function toggleCover(coverId, cardElement) {
+        function selectCover(coverId) {
+            selectedCoverId = coverId;
+            
             document.querySelectorAll('.cover-card').forEach(card => {
                 card.classList.remove('selected');
             });
-
-            cardElement.classList.add('selected');
-            selectedCoverId = coverId;
-
+            
+            const selectedCard = document.querySelector(`[data-cover-id="${coverId}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
             document.getElementById('selectBtn').disabled = false;
-
-            tg.HapticFeedback.impactOccurred('medium');
         }
 
-        async function selectCover() {
-            if (!selectedCoverId) {
-                tg.showAlert('❌ Выберите обложку');
-                return;
-            }
+        async function confirmSelection() {
+            if (!selectedCoverId) return;
 
             try {
-                const payload = {
-                    book_id: parseInt(bookId),
-                    cover_id: selectedCoverId,
-                    action: 'select',
-                    user_id: userData?.id,
-                    telegram_data: { user: userData }
-                };
-
                 const response = await fetch(SELECT_COVER_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        book_id: parseInt(bookId),
+                        user_id: parseInt(userId),
+                        action: 'select',
+                        cover_id: parseInt(selectedCoverId),
+                        telegram_data: tg.initDataUnsafe
+                    })
                 });
 
-                const result = await response.json();
+                const data = await response.json();
 
-                if (result.success) {
+                if (data.success) {
                     tg.showAlert('✅ Обложка выбрана!', () => {
                         tg.close();
                     });
                 } else {
-                    throw new Error(result.message || 'Unknown error');
+                    throw new Error(data.message || 'Selection failed');
                 }
             } catch (error) {
                 console.error('Error selecting cover:', error);
-                tg.showAlert('❌ Ошибка при выборе обложки');
+                tg.showAlert('Ошибка выбора обложки');
             }
         }
 
-        async function regenerateAll() {
-            tg.showConfirm('🔄 Пересоздать все обложки заново?', async (confirmed) => {
-                if (!confirmed) return;
+        async function regenerateCovers() {
+            if (isRegenerating) return;
 
-                try {
-                    const payload = {
-                        book_id: parseInt(bookId),
-                        action: 'regenerate',
-                        user_id: userData?.id,
-                        telegram_data: { user: userData }
-                    };
-
-                    const response = await fetch(SELECT_COVER_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const result = await response.json();
-
-                    tg.showAlert('🔄 Генерация запущена!', () => {
-                        tg.close();
-                    });
-                } catch (error) {
-                    console.error('Error regenerating:', error);
-                    tg.showAlert('❌ Ошибка регенерации');
-                }
+            const confirmed = await new Promise(resolve => {
+                tg.showConfirm(
+                    'Пересоздать все обложки?\n\nТекущие варианты будут удалены.',
+                    resolve
+                );
             });
+
+            if (!confirmed) return;
+
+            isRegenerating = true;
+            showRegeneratingOverlay();
+
+            try {
+                const response = await fetch(SELECT_COVER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        book_id: parseInt(bookId),
+                        user_id: parseInt(userId),
+                        action: 'regenerate',
+                        telegram_data: tg.initDataUnsafe
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showLoadingCovers();
+                    startPolling();
+                } else {
+                    throw new Error(data.message || 'Regeneration failed');
+                }
+            } catch (error) {
+                console.error('Error regenerating covers:', error);
+                hideRegeneratingOverlay();
+                isRegenerating = false;
+                tg.showAlert('Ошибка перегенерации обложек');
+            }
         }
 
-        function showError(message) {
-            const container = document.getElementById('coversContainer');
-            container.className = 'error';
-            container.innerHTML = `<p>${message}</p>`;
+        function showRegeneratingOverlay() {
+            document.getElementById('regeneratingOverlay').classList.add('active');
         }
 
-        // Загружаем обложки при открытии
+        function hideRegeneratingOverlay() {
+            document.getElementById('regeneratingOverlay').classList.remove('active');
+        }
+
+        function showLoadingCovers() {
+            const grid = document.getElementById('coversGrid');
+            grid.innerHTML = '';
+            grid.style.display = 'grid';
+            
+            for (let i = 0; i < 4; i++) {
+                const card = document.createElement('div');
+                card.className = 'cover-card loading';
+                card.innerHTML = '<div class="loading-spinner"></div>';
+                grid.appendChild(card);
+            }
+        }
+
+        function startPolling() {
+            pollingInterval = setInterval(() => {
+                loadCovers();
+            }, 2000);
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+            isRegenerating = false;
+        }
+
+        document.getElementById('selectBtn').addEventListener('click', confirmSelection);
+        document.getElementById('regenerateBtn').addEventListener('click', regenerateCovers);
+
         loadCovers();
     </script>
 </body>
