@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Персонажи книги</title>
+    <title>Галерея персонажей</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -14,595 +14,507 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px 20px 100px 20px;
-            color: #fff;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            padding-bottom: 100px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
 
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .header p {
-            font-size: 16px;
-            opacity: 0.9;
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .character-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .character-card:active {
+            transform: scale(0.95);
+        }
+
+        .character-card.selected {
+            outline: 3px solid var(--tg-theme-button-color, #0088cc);
+        }
+
+        .character-card.regenerating {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .character-image {
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            display: block;
+        }
+
+        .character-info {
+            padding: 12px;
+        }
+
+        .character-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            line-height: 1.3;
+        }
+
+        .character-role {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        /* Лоадер на карточке */
+        .card-loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .loading {
             text-align: center;
-            padding: 60px 20px;
-            font-size: 18px;
-            opacity: 0.9;
+            padding: 40px 20px;
+            color: var(--tg-theme-hint-color, #999999);
         }
 
-        .loading::after {
-            content: '';
-            display: block;
-            width: 40px;
-            height: 40px;
-            margin: 20px auto;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .characters-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .character-card {
-            position: relative;
-            background: rgba(255,255,255,0.1);
-            border-radius: 16px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 3px solid transparent;
-        }
-
-        .character-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .character-card.selected {
-            border-color: #4ade80;
-            box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
-        }
-
-        .character-card.loading {
-            pointer-events: none;
-        }
-
-        .character-image-container {
-            position: relative;
-            width: 100%;
-            padding-top: 140%;
-            background: rgba(0,0,0,0.2);
-        }
-
-        .character-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .character-info {
-            padding: 15px;
-        }
-
-        .character-name {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #fff;
-        }
-
-        .character-role {
-            font-size: 13px;
-            opacity: 0.8;
-            color: #e0e0e0;
-        }
-
-        .character-loader {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 20;
-        }
-
-        .character-card.loading .character-loader {
-            display: flex;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s linear infinite;
-        }
-
-        .character-loader-text {
-            font-size: 13px;
-            font-weight: 500;
+        .error {
             text-align: center;
-            opacity: 0.9;
-            line-height: 1.4;
-            padding: 0 20px;
+            padding: 40px 20px;
+            color: #ff3b30;
         }
 
-        .checkmark {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 32px;
-            height: 32px;
-            background: rgba(74, 222, 128, 0.95);
-            border-radius: 50%;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            z-index: 15;
-            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.5);
-        }
-
-        .character-card.selected .checkmark {
-            display: flex;
-        }
-
-        .actions {
+        /* Кнопка ВНИЗУ под галереей */
+        .button-container {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-
-        .actions-container {
-            max-width: 800px;
-            margin: 0 auto;
+            background: var(--tg-theme-bg-color, #ffffff);
+            padding: 12px 16px;
+            border-top: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
         }
 
         .btn {
             width: 100%;
-            padding: 16px 24px;
+            padding: 14px 20px;
             border: none;
             border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            transition: opacity 0.2s;
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
         }
 
         .btn:active {
-            transform: scale(0.98);
+            opacity: 0.7;
         }
 
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-
-        .btn-regenerate {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-regenerate:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-confirm {
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-            color: white;
-            display: none;
-        }
-
-        .btn-confirm.show {
-            display: flex;
-        }
-
-        .btn-confirm:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
-        }
-
-        @media (max-width: 768px) {
-            .characters-grid {
-                gap: 15px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .btn {
-                padding: 14px 20px;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>👥 Персонажи книги</h1>
-            <p>Выберите персонажей для перегенерации</p>
-        </div>
-
-        <div id="loading" class="loading">
-            Загружаем персонажей...
-        </div>
-
-        <div id="characters-grid" class="characters-grid" style="display: none;"></div>
+    <div class="header">
+        <h1>Персонажи книги</h1>
+        <p id="subtitle">Загрузка...</p>
     </div>
 
-    <div class="actions">
-        <div class="actions-container">
-            <button id="btn-regenerate" class="btn btn-regenerate">
-                <span>🔄 Перегенерировать всё</span>
-            </button>
-            <button id="btn-confirm" class="btn btn-confirm">
-                <span>✅ Подтвердить</span>
-            </button>
+    <div id="gallery" class="gallery">
+        <div class="loading">
+            <p>Загружаем персонажей...</p>
         </div>
+    </div>
+
+    <!-- Одна кнопка ВНИЗУ -->
+    <div class="button-container" id="buttonContainer">
+        <button class="btn" id="actionBtn">
+            Подтвердить
+        </button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready();
+        tg.BackButton.show();
+        tg.BackButton.onClick(() => tg.close());
 
-        const GET_CHARACTERS_URL = 'https://fignetic-n8n.ru/webhook/6845fca0-206d-49fe-9202-334f079d92f0';
-        const PROCESS_CHARACTER_URL = 'https://fignetic-n8n.ru/webhook/bb855bc5-ff94-4a4e-ad53-56f9497610f8';
-
+        // Получаем данные пользователя из Telegram WebApp
+        const userId = tg.initDataUnsafe?.user?.id || null;
+        const userName = tg.initDataUnsafe?.user?.first_name || 'User';
+        
         const urlParams = new URLSearchParams(window.location.search);
         const bookId = urlParams.get('book_id');
-        const userId = tg.initDataUnsafe?.user?.id;
-
-        let selectedCharacterIds = [];
+        let selectedCharacters = new Set();
         let isRegenerating = false;
         let pollingInterval = null;
+        let allCharacters = [];
 
-        // Загрузка персонажей
+        // Перевод ролей на русский
+        const roleTranslations = {
+            'protagonist': 'Главный герой',
+            'antagonist': 'Антагонист',
+            'supporting': 'Второстепенный',
+            'mentor': 'Наставник'
+        };
+
+        function translateRole(role) {
+            return roleTranslations[role] || role;
+        }
+
         async function loadCharacters() {
             try {
-                const response = await fetch(`${GET_CHARACTERS_URL}?book_id=${bookId}`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+                const response = await fetch(`https://fignetic-n8n.ru/webhook/6845fca0-206d-49fe-9202-334f079d92f0?book_id=${bookId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки персонажей');
+                }
 
                 const data = await response.json();
                 
                 if (!data.characters || data.characters.length === 0) {
-                    throw new Error('Персонажи не найдены');
+                    document.getElementById('gallery').innerHTML = '<div class="error">Персонажи не найдены</div>';
+                    return;
                 }
 
-                displayCharacters(data.characters);
+                allCharacters = data.characters;
+                document.getElementById('subtitle').textContent = `Выберите персонажей для перегенерации`;
+                renderCharacters(allCharacters);
+
             } catch (error) {
-                console.error('Error loading characters:', error);
-                document.getElementById('loading').innerHTML = '❌ Ошибка загрузки персонажей';
+                console.error('Error:', error);
+                document.getElementById('gallery').innerHTML = `<div class="error">Ошибка: ${error.message}</div>`;
             }
         }
 
-        // Отображение персонажей
-        function displayCharacters(characters) {
-            document.getElementById('loading').style.display = 'none';
-            const grid = document.getElementById('characters-grid');
-            grid.style.display = 'grid';
-            
-            // Если уже есть карточки, обновляем только изображения
-            if (grid.children.length === characters.length) {
-                characters.forEach((character, index) => {
-                    const card = grid.children[index];
-                    const img = card.querySelector('.character-image');
-                    if (img && img.src !== character.s3_url) {
-                        img.src = character.s3_url;
-                        card.classList.remove('loading');
-                    }
-                });
-            } else {
-                // Создаём новые карточки
-                grid.innerHTML = '';
-                characters.forEach((character) => {
-                    const card = createCharacterCard(character);
-                    grid.appendChild(card);
-                });
-            }
-        }
+        function renderCharacters(characters) {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
 
-        // Создание карточки персонажа
-        function createCharacterCard(character) {
-            const card = document.createElement('div');
-            card.className = 'character-card';
-            card.dataset.characterId = character.id;
-            
-            const roleNames = {
-                'main': 'Главный',
-                'secondary': 'Второстепенный',
-                'antagonist': 'Антагонист',
-                'supporting': 'Вспомогательный'
-            };
-            
-            card.innerHTML = `
-                <div class="character-image-container">
-                    <img src="${character.s3_url || character.reference_image_url}" 
-                         alt="${character.name}" 
-                         class="character-image">
-                    <div class="checkmark">✓</div>
-                    <div class="character-loader">
-                        <div class="spinner"></div>
-                        <div class="character-loader-text">Генерируем<br>персонажа...</div>
+            characters.forEach(character => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.dataset.characterId = character.id;
+                card.id = `char-${character.id}`;
+
+                card.innerHTML = `
+                    <img src="${character.reference_image_url}" alt="${character.name}" class="character-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22%3E%3Crect fill=%22%23ddd%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2220%22%3EНет фото%3C/text%3E%3C/svg%3E'">
+                    <div class="character-info">
+                        <div class="character-name">${character.name}</div>
+                        <div class="character-role">${translateRole(character.role)}</div>
                     </div>
-                </div>
-                <div class="character-info">
-                    <div class="character-name">${character.name}</div>
-                    <div class="character-role">${roleNames[character.role] || character.role}</div>
-                </div>
-            `;
+                `;
 
-            card.addEventListener('click', () => selectCharacter(character.id));
-            
-            return card;
+                if (!isRegenerating) {
+                    card.addEventListener('click', () => toggleSelection(card, character.id));
+                }
+                
+                gallery.appendChild(card);
+            });
+
+            updateButton();
         }
 
-        // Выбор персонажа
-        function selectCharacter(characterId) {
-            if (isRegenerating) return;
+        function toggleSelection(card, characterId) {
+            if (selectedCharacters.has(characterId)) {
+                selectedCharacters.delete(characterId);
+                card.classList.remove('selected');
+            } else {
+                selectedCharacters.add(characterId);
+                card.classList.add('selected');
+            }
+            updateButton();
+        }
 
-            const card = document.querySelector(`[data-character-id="${characterId}"]`);
+        function updateButton() {
+            const actionBtn = document.getElementById('actionBtn');
+
+            if (isRegenerating) {
+                actionBtn.disabled = true;
+                actionBtn.textContent = 'Генерация...';
+                return;
+            }
+
+            if (selectedCharacters.size > 0) {
+                actionBtn.textContent = `Перегенерировать выбранных (${selectedCharacters.size})`;
+                actionBtn.disabled = false;
+            } else {
+                actionBtn.textContent = 'Продолжить без изменений';
+                actionBtn.disabled = false;
+            }
+        }
+
+        function showLoader(characterId) {
+            const card = document.getElementById(`char-${characterId}`);
             if (!card) return;
 
-            if (card.classList.contains('selected')) {
-                // Снимаем выделение
-                card.classList.remove('selected');
-                selectedCharacterIds = selectedCharacterIds.filter(id => id !== characterId);
-            } else {
-                // Добавляем выделение
-                card.classList.add('selected');
-                selectedCharacterIds.push(characterId);
-            }
-
-            // Показываем/скрываем кнопку "Подтвердить"
-            if (selectedCharacterIds.length > 0) {
-                document.getElementById('btn-confirm').classList.add('show');
-                document.getElementById('btn-regenerate').style.display = 'none';
-            } else {
-                document.getElementById('btn-confirm').classList.remove('show');
-                document.getElementById('btn-regenerate').style.display = 'flex';
-            }
-        }
-
-        // Подтверждение выбранных персонажей
-        async function confirmSelection() {
-            if (selectedCharacterIds.length === 0) return;
-
-            isRegenerating = true;
-            document.getElementById('btn-confirm').disabled = true;
+            card.classList.add('regenerating');
             
-            // Показываем загрузку НА ВЫБРАННЫХ карточках
-            selectedCharacterIds.forEach(characterId => {
-                const card = document.querySelector(`[data-character-id="${characterId}"]`);
-                if (card) {
-                    card.classList.add('loading');
-                    card.classList.remove('selected');
-                }
-            });
-
-            try {
-                const response = await fetch(PROCESS_CHARACTER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'regenerate',
-                        book_id: bookId,
-                        character_ids: selectedCharacterIds,
-                        user_id: userId,
-                        telegram_data: tg.initDataUnsafe
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Запускаем polling для получения новых изображений
-                    startPolling();
-                } else {
-                    throw new Error(data.message || 'Ошибка перегенерации');
-                }
-            } catch (error) {
-                console.error('Error confirming:', error);
-                alert('Ошибка при перегенерации персонажей');
-                
-                selectedCharacterIds.forEach(characterId => {
-                    const card = document.querySelector(`[data-character-id="${characterId}"]`);
-                    if (card) card.classList.remove('loading');
-                });
-                
-                isRegenerating = false;
-                document.getElementById('btn-confirm').disabled = false;
-            }
-        }
-
-        // Перегенерация всех персонажей
-        async function regenerateAll() {
-            if (isRegenerating) return;
-
-            isRegenerating = true;
-            document.getElementById('btn-regenerate').disabled = true;
+            const loader = document.createElement('div');
+            loader.className = 'card-loader';
+            loader.innerHTML = `
+                <div class="spinner"></div>
+                <div>Генерация...</div>
+            `;
             
-            // Показываем загрузку НА ВСЕХ карточках
-            document.querySelectorAll('.character-card').forEach(card => {
-                card.classList.add('loading');
-                card.classList.remove('selected');
-            });
-
-            selectedCharacterIds = [];
-
-            try {
-                const response = await fetch(PROCESS_CHARACTER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'regenerate_all',
-                        book_id: bookId,
-                        user_id: userId,
-                        telegram_data: tg.initDataUnsafe
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Запускаем polling для получения новых изображений
-                    startPolling();
-                } else {
-                    throw new Error(data.message || 'Ошибка перегенерации');
-                }
-            } catch (error) {
-                console.error('Error regenerating:', error);
-                alert('Ошибка при перегенерации персонажей');
-                
-                document.querySelectorAll('.character-card').forEach(card => {
-                    card.classList.remove('loading');
-                });
-                
-                isRegenerating = false;
-                document.getElementById('btn-regenerate').disabled = false;
-            }
+            card.appendChild(loader);
         }
 
-        // Polling для получения новых изображений
-        function startPolling() {
-            let pollCount = 0;
-            const maxPolls = 60; // 2 минуты максимум
-            let previousUrls = new Map();
+        function updateCharacterImage(characterId, newImageUrl) {
+            const card = document.getElementById(`char-${characterId}`);
+            if (!card) return;
 
-            // Сохраняем текущие URL
-            document.querySelectorAll('.character-image').forEach(img => {
-                const card = img.closest('.character-card');
-                const characterId = card.dataset.characterId;
-                previousUrls.set(characterId, img.src);
-            });
+            // Удаляем лоадер
+            const loader = card.querySelector('.card-loader');
+            if (loader) {
+                loader.remove();
+            }
+
+            // Обновляем картинку
+            const img = card.querySelector('.character-image');
+            if (img && newImageUrl) {
+                img.src = newImageUrl;
+            }
+
+            card.classList.remove('regenerating');
+        }
+
+        async function startPolling(characterIds) {
+            let attempts = 0;
+            const maxAttempts = 60; // 3 минуты максимум (60 * 3 секунды)
 
             pollingInterval = setInterval(async () => {
-                pollCount++;
+                attempts++;
+
+                if (attempts > maxAttempts) {
+                    stopPolling();
+                    tg.showAlert('Превышено время ожидания. Пожалуйста, обновите галерею.');
+                    return;
+                }
 
                 try {
-                    const response = await fetch(`${GET_CHARACTERS_URL}?book_id=${bookId}`, {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
+                    // Загружаем обновленные данные персонажей
+                    const response = await fetch(`https://fignetic-n8n.ru/webhook/6845fca0-206d-49fe-9202-334f079d92f0?book_id=${bookId}`);
+                    
+                    if (!response.ok) {
+                        console.error('Ошибка при polling');
+                        return;
+                    }
 
                     const data = await response.json();
-                    
-                    if (data.characters && data.characters.length > 0) {
-                        // Проверяем, изменились ли URL персонажей
-                        let hasChanged = false;
+                    let allCompleted = true;
+
+                    // Проверяем каждого выбранного персонажа
+                    characterIds.forEach(charId => {
+                        const updatedChar = data.characters.find(c => c.id === charId);
                         
-                        data.characters.forEach(character => {
-                            const oldUrl = previousUrls.get(String(character.id));
-                            const newUrl = character.s3_url || character.reference_image_url;
+                        if (updatedChar && updatedChar.reference_image_url) {
+                            // Находим старую версию персонажа
+                            const oldChar = allCharacters.find(c => c.id === charId);
                             
-                            if (oldUrl && oldUrl !== newUrl) {
-                                hasChanged = true;
+                            // Если URL изменился - обновляем
+                            if (!oldChar || oldChar.reference_image_url !== updatedChar.reference_image_url) {
+                                updateCharacterImage(charId, updatedChar.reference_image_url);
+                                allCharacters = allCharacters.map(c => 
+                                    c.id === charId ? updatedChar : c
+                                );
                             }
-                        });
-                        
-                        if (hasChanged) {
-                            // Персонажи обновились!
-                            displayCharacters(data.characters);
-                            stopPolling();
+                        } else {
+                            allCompleted = false;
                         }
+                    });
+
+                    // Если все готовы - останавливаем polling
+                    if (allCompleted) {
+                        stopPolling();
+                        isRegenerating = false;
+                        selectedCharacters.clear();
+                        document.getElementById('subtitle').textContent = 'Персонажи обновлены! Выберите для новой перегенерации';
+                        updateButton();
+                        tg.showPopup({
+                            title: 'Готово!',
+                            message: 'Все персонажи успешно перегенерированы',
+                            buttons: [{type: 'ok'}]
+                        });
                     }
+
                 } catch (error) {
                     console.error('Polling error:', error);
                 }
-
-                // Останавливаем polling после максимального количества попыток
-                if (pollCount >= maxPolls) {
-                    stopPolling();
-                    alert('Время ожидания истекло. Попробуйте перезагрузить страницу.');
-                }
-            }, 2000); // Каждые 2 секунды
+            }, 3000); // Проверяем каждые 3 секунды
         }
 
-        // Остановка polling
         function stopPolling() {
             if (pollingInterval) {
                 clearInterval(pollingInterval);
                 pollingInterval = null;
             }
-            
-            document.querySelectorAll('.character-card').forEach(card => {
-                card.classList.remove('loading');
-            });
-            
-            isRegenerating = false;
-            selectedCharacterIds = [];
-            document.getElementById('btn-regenerate').disabled = false;
-            document.getElementById('btn-confirm').classList.remove('show');
-            document.getElementById('btn-regenerate').style.display = 'flex';
         }
 
-        // Event listeners
-        document.getElementById('btn-regenerate').addEventListener('click', regenerateAll);
-        document.getElementById('btn-confirm').addEventListener('click', confirmSelection);
+        document.getElementById('actionBtn').addEventListener('click', async () => {
+            const actionBtn = document.getElementById('actionBtn');
+            
+            if (selectedCharacters.size === 0) {
+                // Продолжить без перегенерации
+                const payload = {
+                    user_id: userId,
+                    book_id: bookId,
+                    action: 'continue',
+                    character_ids: [],
+                    telegram_data: {
+                        user: tg.initDataUnsafe?.user || {},
+                        chat: tg.initDataUnsafe?.chat || {}
+                    }
+                };
 
-        // Инициализация
-        if (!bookId) {
-            document.getElementById('loading').innerHTML = '❌ ID книги не найден';
-        } else {
-            loadCharacters();
-        }
+                try {
+                    actionBtn.disabled = true;
+                    actionBtn.textContent = 'Отправка...';
 
-        // Очистка при закрытии
-        window.addEventListener('beforeunload', () => {
-            stopPolling();
+                    const response = await fetch('https://fignetic-n8n.ru/webhook/bb855bc5-ff94-4a4e-ad53-56f9497610f8', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    tg.showAlert('Продолжаем с текущими персонажами!', () => {
+                        tg.close();
+                    });
+
+                } catch (error) {
+                    console.error('Ошибка отправки:', error);
+                    tg.showAlert(`Ошибка: ${error.message}`);
+                    actionBtn.disabled = false;
+                    updateButton();
+                }
+                return;
+            }
+
+            // ПЕРЕГЕНЕРАЦИЯ ВЫБРАННЫХ ПЕРСОНАЖЕЙ
+            const characterIds = Array.from(selectedCharacters);
+            
+            const payload = {
+                user_id: userId,
+                book_id: bookId,
+                action: 'regenerate',
+                character_ids: characterIds,
+                telegram_data: {
+                    user: tg.initDataUnsafe?.user || {},
+                    chat: tg.initDataUnsafe?.chat || {}
+                }
+            };
+
+            try {
+                actionBtn.disabled = true;
+                actionBtn.textContent = 'Отправка...';
+                isRegenerating = true;
+
+                console.log('Отправка данных:', payload);
+
+                const response = await fetch('https://fignetic-n8n.ru/webhook/bb855bc5-ff94-4a4e-ad53-56f9497610f8', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Ответ сервера:', result);
+
+                // Показываем лоадеры на выбранных карточках
+                characterIds.forEach(charId => {
+                    showLoader(charId);
+                    const card = document.getElementById(`char-${charId}`);
+                    if (card) {
+                        card.classList.remove('selected');
+                    }
+                });
+
+                document.getElementById('subtitle').textContent = `Генерируем ${characterIds.length} персонажей...`;
+                updateButton();
+
+                // Запускаем polling для отслеживания прогресса
+                startPolling(characterIds);
+
+            } catch (error) {
+                console.error('Ошибка отправки:', error);
+                tg.showAlert(`Ошибка: ${error.message}`);
+                actionBtn.disabled = false;
+                isRegenerating = false;
+                updateButton();
+            }
         });
+
+        // Очищаем polling при закрытии
+        window.addEventListener('beforeunload', stopPolling);
+
+        loadCharacters();
     </script>
 </body>
 </html>
