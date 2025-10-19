@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Галерея персонажей</title>
+    <title>Выбор обложки</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -14,15 +14,20 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--tg-theme-bg-color, #ffffff);
+            background: var(--tg-theme-bg-color, #ffffff);
             color: var(--tg-theme-text-color, #000000);
             padding: 16px;
-            padding-bottom: 100px;
+            padding-bottom: 80px;
         }
 
         .header {
             text-align: center;
             margin-bottom: 24px;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
         }
 
         .header h1 {
@@ -33,159 +38,222 @@
 
         .header p {
             font-size: 14px;
-            color: var(--tg-theme-hint-color, #999999);
-        }
-
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .character-card {
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s;
-            position: relative;
-        }
-
-        .character-card:active {
-            transform: scale(0.95);
-        }
-
-        .character-card.selected {
-            outline: 3px solid var(--tg-theme-button-color, #0088cc);
-        }
-
-        .character-card.regenerating {
-            pointer-events: none;
-            opacity: 0.7;
-        }
-
-        .character-image {
-            width: 100%;
-            aspect-ratio: 3/4;
-            object-fit: cover;
-            display: block;
-        }
-
-        .character-info {
-            padding: 12px;
-        }
-
-        .character-name {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            hyphens: auto;
-            line-height: 1.3;
-        }
-
-        .character-role {
-            font-size: 12px;
-            color: var(--tg-theme-hint-color, #999999);
-        }
-
-        /* Лоадер на карточке */
-        .card-loader {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-            z-index: 10;
-        }
-
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            color: var(--tg-theme-hint-color, #999);
         }
 
         .loading {
             text-align: center;
-            padding: 40px 20px;
-            color: var(--tg-theme-hint-color, #999999);
+            padding: 60px 20px;
         }
 
-        .error {
-            text-align: center;
-            padding: 40px 20px;
-            color: #ff3b30;
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-top-color: var(--tg-theme-button-color, #3390ec);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
         }
 
-        /* Кнопка ВНИЗУ под галереей */
-        .button-container {
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .covers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .cover-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            aspect-ratio: 2/3;
+        }
+
+        .cover-card.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cover-card .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0;
+        }
+
+        .cover-card.selected {
+            outline: 3px solid var(--tg-theme-button-color, #3390ec);
+            outline-offset: -3px;
+        }
+
+        .cover-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cover-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            padding: 12px;
+            color: white;
+        }
+
+        .cover-style {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            background: var(--tg-theme-button-color, #3390ec);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .cover-card.selected .checkmark {
+            display: flex;
+        }
+
+        .bottom-buttons {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: var(--tg-theme-bg-color, #ffffff);
             padding: 12px 16px;
-            border-top: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            display: flex;
+            gap: 12px;
         }
 
-        .btn {
-            width: 100%;
+        .button {
+            flex: 1;
             padding: 14px 20px;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s;
-            background: var(--tg-theme-button-color, #0088cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .btn:active {
+        .button-regenerate {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #000);
+        }
+
+        .button-regenerate:active {
             opacity: 0.7;
         }
 
-        .btn:disabled {
+        .button-select {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .button-select:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        .button-select:not(:disabled):active {
+            opacity: 0.8;
+        }
+
+        .regenerating-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .regenerating-overlay.active {
+            display: flex;
+        }
+
+        .regenerating-content {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .regenerating-content .loading-spinner {
+            margin: 0 auto 20px;
+        }
+
+        .regenerating-content h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .regenerating-content p {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999);
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Персонажи книги</h1>
-        <p id="subtitle">Загрузка...</p>
+        <div class="header-icon">🎨</div>
+        <h1>Выберите обложку</h1>
+        <p>Выберите лучший вариант для вашей книги</p>
     </div>
 
-    <div id="gallery" class="gallery">
-        <div class="loading">
-            <p>Загружаем персонажей...</p>
-        </div>
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>Загружаем обложки...</p>
     </div>
 
-    <!-- Одна кнопка ВНИЗУ -->
-    <div class="button-container" id="buttonContainer">
-        <button class="btn" id="actionBtn">
-            Подтвердить
+    <div class="covers-grid" id="coversGrid" style="display: none;"></div>
+
+    <div class="bottom-buttons">
+        <button class="button button-regenerate" id="regenerateBtn">
+            <span>🔄</span>
+            <span>Пересоздать всё</span>
         </button>
+        <button class="button button-select" id="selectBtn" disabled>
+            <span>✅</span>
+            <span>Выбрать</span>
+        </button>
+    </div>
+
+    <div class="regenerating-overlay" id="regeneratingOverlay">
+        <div class="regenerating-content">
+            <div class="loading-spinner"></div>
+            <h3>Создаём новые обложки...</h3>
+            <p>Это займёт ~30 секунд</p>
+        </div>
     </div>
 
     <script>
@@ -194,209 +262,194 @@
         tg.BackButton.show();
         tg.BackButton.onClick(() => tg.close());
 
-        // Получаем данные пользователя из Telegram WebApp
-        const userId = tg.initDataUnsafe?.user?.id || null;
-        const userName = tg.initDataUnsafe?.user?.first_name || 'User';
+        const API_BASE = 'https://n8n.fignetic.ru/webhook';
+        const GET_COVERS_URL = `${API_BASE}/c535da09-89bc-4090-97ce-ac693bdc40e3`;
+        const SELECT_COVER_URL = `${API_BASE}/ccd382e4-7bac-4694-b9a6-1c26782d3ff7`;
         
         const urlParams = new URLSearchParams(window.location.search);
         const bookId = urlParams.get('book_id');
-        let selectedCharacters = new Set();
+        const userId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
+
+        let selectedCoverId = null;
         let isRegenerating = false;
         let pollingInterval = null;
-        let allCharacters = [];
 
-        // Перевод ролей на русский
-        const roleTranslations = {
-            'protagonist': 'Главный герой',
-            'antagonist': 'Антагонист',
-            'supporting': 'Второстепенный',
-            'mentor': 'Наставник'
+        const styleNames = {
+            minimalism: 'Минимализм',
+            realism: 'Реализм',
+            '3d': '3D Рендер',
+            watercolor: 'Акварель'
         };
 
-        function translateRole(role) {
-            return roleTranslations[role] || role;
-        }
-
-        async function loadCharacters() {
+        async function loadCovers() {
             try {
-                const response = await fetch(`https://fignetic-n8n.ru/webhook/6845fca0-206d-49fe-9202-334f079d92f0?book_id=${bookId}`);
-                
-                if (!response.ok) {
-                    throw new Error('Ошибка загрузки персонажей');
-                }
-
+                const response = await fetch(`${GET_COVERS_URL}?book_id=${bookId}`);
                 const data = await response.json();
-                
-                if (!data.characters || data.characters.length === 0) {
-                    document.getElementById('gallery').innerHTML = '<div class="error">Персонажи не найдены</div>';
-                    return;
+
+                if (data.success && data.covers && data.covers.length > 0) {
+                    displayCovers(data.covers);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('coversGrid').style.display = 'grid';
+                    
+                    if (isRegenerating) {
+                        stopPolling();
+                        hideRegeneratingOverlay();
+                        tg.showAlert('✅ Новые обложки готовы!');
+                    }
+                } else if (!isRegenerating) {
+                    throw new Error('No covers found');
                 }
-
-                allCharacters = data.characters;
-                document.getElementById('subtitle').textContent = `Выберите персонажей для перегенерации`;
-                renderCharacters(allCharacters);
-
             } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('gallery').innerHTML = `<div class="error">Ошибка: ${error.message}</div>`;
+                console.error('Error loading covers:', error);
+                if (!isRegenerating) {
+                    tg.showAlert('Ошибка загрузки обложек');
+                }
             }
         }
 
-        function renderCharacters(characters) {
-            const gallery = document.getElementById('gallery');
-            gallery.innerHTML = '';
+        function displayCovers(covers) {
+            const grid = document.getElementById('coversGrid');
+            grid.innerHTML = '';
 
-            characters.forEach(character => {
+            covers.forEach(cover => {
                 const card = document.createElement('div');
-                card.className = 'character-card';
-                card.dataset.characterId = character.id;
-                card.id = `char-${character.id}`;
+                card.className = 'cover-card';
+                card.dataset.coverId = cover.id;
+
+                const styleName = cover.generation_params?.style || 'unknown';
+                const displayStyle = styleNames[styleName] || styleName;
 
                 card.innerHTML = `
-                    <img src="${character.reference_image_url}" alt="${character.name}" class="character-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22%3E%3Crect fill=%22%23ddd%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2220%22%3EНет фото%3C/text%3E%3C/svg%3E'">
-                    <div class="character-info">
-                        <div class="character-name">${character.name}</div>
-                        <div class="character-role">${translateRole(character.role)}</div>
+                    <img src="${cover.s3_url}" alt="Cover" class="cover-image">
+                    <div class="cover-overlay">
+                        <div class="cover-style">${displayStyle}</div>
                     </div>
+                    <div class="checkmark">✓</div>
                 `;
 
-                if (!isRegenerating) {
-                    card.addEventListener('click', () => toggleSelection(card, character.id));
+                card.addEventListener('click', () => selectCover(cover.id));
+                grid.appendChild(card);
+            });
+        }
+
+        function selectCover(coverId) {
+            selectedCoverId = coverId;
+            
+            document.querySelectorAll('.cover-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            const selectedCard = document.querySelector(`[data-cover-id="${coverId}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
+            document.getElementById('selectBtn').disabled = false;
+        }
+
+        async function confirmSelection() {
+            if (!selectedCoverId) return;
+
+            try {
+                const response = await fetch(SELECT_COVER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        book_id: parseInt(bookId),
+                        user_id: parseInt(userId),
+                        action: 'select',
+                        cover_id: parseInt(selectedCoverId),
+                        telegram_data: tg.initDataUnsafe
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    tg.showAlert('✅ Обложка выбрана!', () => {
+                        tg.close();
+                    });
+                } else {
+                    throw new Error(data.message || 'Selection failed');
                 }
-                
-                gallery.appendChild(card);
+            } catch (error) {
+                console.error('Error selecting cover:', error);
+                tg.showAlert('Ошибка выбора обложки');
+            }
+        }
+
+        async function regenerateCovers() {
+            if (isRegenerating) return;
+
+            const confirmed = await new Promise(resolve => {
+                tg.showConfirm(
+                    'Пересоздать все обложки?\n\nТекущие варианты будут удалены.',
+                    resolve
+                );
             });
 
-            updateButton();
-        }
+            if (!confirmed) return;
 
-        function toggleSelection(card, characterId) {
-            if (selectedCharacters.has(characterId)) {
-                selectedCharacters.delete(characterId);
-                card.classList.remove('selected');
-            } else {
-                selectedCharacters.add(characterId);
-                card.classList.add('selected');
-            }
-            updateButton();
-        }
+            isRegenerating = true;
+            showRegeneratingOverlay();
 
-        function updateButton() {
-            const actionBtn = document.getElementById('actionBtn');
+            try {
+                const response = await fetch(SELECT_COVER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        book_id: parseInt(bookId),
+                        user_id: parseInt(userId),
+                        action: 'regenerate',
+                        telegram_data: tg.initDataUnsafe
+                    })
+                });
 
-            if (isRegenerating) {
-                actionBtn.disabled = true;
-                actionBtn.textContent = 'Генерация...';
-                return;
-            }
+                const data = await response.json();
 
-            if (selectedCharacters.size > 0) {
-                actionBtn.textContent = `Перегенерировать выбранных (${selectedCharacters.size})`;
-                actionBtn.disabled = false;
-            } else {
-                actionBtn.textContent = 'Продолжить без изменений';
-                actionBtn.disabled = false;
-            }
-        }
-
-        function showLoader(characterId) {
-            const card = document.getElementById(`char-${characterId}`);
-            if (!card) return;
-
-            card.classList.add('regenerating');
-            
-            const loader = document.createElement('div');
-            loader.className = 'card-loader';
-            loader.innerHTML = `
-                <div class="spinner"></div>
-                <div>Генерация...</div>
-            `;
-            
-            card.appendChild(loader);
-        }
-
-        function updateCharacterImage(characterId, newImageUrl) {
-            const card = document.getElementById(`char-${characterId}`);
-            if (!card) return;
-
-            // Удаляем лоадер
-            const loader = card.querySelector('.card-loader');
-            if (loader) {
-                loader.remove();
-            }
-
-            // Обновляем картинку
-            const img = card.querySelector('.character-image');
-            if (img && newImageUrl) {
-                img.src = newImageUrl;
-            }
-
-            card.classList.remove('regenerating');
-        }
-
-        async function startPolling(characterIds) {
-            let attempts = 0;
-            const maxAttempts = 60; // 3 минуты максимум (60 * 3 секунды)
-
-            pollingInterval = setInterval(async () => {
-                attempts++;
-
-                if (attempts > maxAttempts) {
-                    stopPolling();
-                    tg.showAlert('Превышено время ожидания. Пожалуйста, обновите галерею.');
-                    return;
+                if (data.success) {
+                    showLoadingCovers();
+                    startPolling();
+                } else {
+                    throw new Error(data.message || 'Regeneration failed');
                 }
+            } catch (error) {
+                console.error('Error regenerating covers:', error);
+                hideRegeneratingOverlay();
+                isRegenerating = false;
+                tg.showAlert('Ошибка перегенерации обложек');
+            }
+        }
 
-                try {
-                    // Загружаем обновленные данные персонажей
-                    const response = await fetch(`https://fignetic-n8n.ru/webhook/6845fca0-206d-49fe-9202-334f079d92f0?book_id=${bookId}`);
-                    
-                    if (!response.ok) {
-                        console.error('Ошибка при polling');
-                        return;
-                    }
+        function showRegeneratingOverlay() {
+            document.getElementById('regeneratingOverlay').classList.add('active');
+        }
 
-                    const data = await response.json();
-                    let allCompleted = true;
+        function hideRegeneratingOverlay() {
+            document.getElementById('regeneratingOverlay').classList.remove('active');
+        }
 
-                    // Проверяем каждого выбранного персонажа
-                    characterIds.forEach(charId => {
-                        const updatedChar = data.characters.find(c => c.id === charId);
-                        
-                        if (updatedChar && updatedChar.reference_image_url) {
-                            // Находим старую версию персонажа
-                            const oldChar = allCharacters.find(c => c.id === charId);
-                            
-                            // Если URL изменился - обновляем
-                            if (!oldChar || oldChar.reference_image_url !== updatedChar.reference_image_url) {
-                                updateCharacterImage(charId, updatedChar.reference_image_url);
-                                allCharacters = allCharacters.map(c => 
-                                    c.id === charId ? updatedChar : c
-                                );
-                            }
-                        } else {
-                            allCompleted = false;
-                        }
-                    });
+        function showLoadingCovers() {
+            const grid = document.getElementById('coversGrid');
+            grid.innerHTML = '';
+            grid.style.display = 'grid';
+            
+            for (let i = 0; i < 4; i++) {
+                const card = document.createElement('div');
+                card.className = 'cover-card loading';
+                card.innerHTML = '<div class="loading-spinner"></div>';
+                grid.appendChild(card);
+            }
+        }
 
-                    // Если все готовы - останавливаем polling
-                    if (allCompleted) {
-                        stopPolling();
-                        isRegenerating = false;
-                        selectedCharacters.clear();
-                        document.getElementById('subtitle').textContent = 'Персонажи обновлены! Выберите для новой перегенерации';
-                        updateButton();
-                        tg.showPopup({
-                            title: 'Готово!',
-                            message: 'Все персонажи успешно перегенерированы',
-                            buttons: [{type: 'ok'}]
-                        });
-                    }
-
-                } catch (error) {
-                    console.error('Polling error:', error);
-                }
-            }, 3000); // Проверяем каждые 3 секунды
+        function startPolling() {
+            pollingInterval = setInterval(() => {
+                loadCovers();
+            }, 2000);
         }
 
         function stopPolling() {
@@ -404,117 +457,13 @@
                 clearInterval(pollingInterval);
                 pollingInterval = null;
             }
+            isRegenerating = false;
         }
 
-        document.getElementById('actionBtn').addEventListener('click', async () => {
-            const actionBtn = document.getElementById('actionBtn');
-            
-            if (selectedCharacters.size === 0) {
-                // Продолжить без перегенерации
-                const payload = {
-                    user_id: userId,
-                    book_id: bookId,
-                    action: 'continue',
-                    character_ids: [],
-                    telegram_data: {
-                        user: tg.initDataUnsafe?.user || {},
-                        chat: tg.initDataUnsafe?.chat || {}
-                    }
-                };
+        document.getElementById('selectBtn').addEventListener('click', confirmSelection);
+        document.getElementById('regenerateBtn').addEventListener('click', regenerateCovers);
 
-                try {
-                    actionBtn.disabled = true;
-                    actionBtn.textContent = 'Отправка...';
-
-                    const response = await fetch('https://fignetic-n8n.ru/webhook/bb855bc5-ff94-4a4e-ad53-56f9497610f8', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    tg.showAlert('Продолжаем с текущими персонажами!', () => {
-                        tg.close();
-                    });
-
-                } catch (error) {
-                    console.error('Ошибка отправки:', error);
-                    tg.showAlert(`Ошибка: ${error.message}`);
-                    actionBtn.disabled = false;
-                    updateButton();
-                }
-                return;
-            }
-
-            // ПЕРЕГЕНЕРАЦИЯ ВЫБРАННЫХ ПЕРСОНАЖЕЙ
-            const characterIds = Array.from(selectedCharacters);
-            
-            const payload = {
-                user_id: userId,
-                book_id: bookId,
-                action: 'regenerate',
-                character_ids: characterIds,
-                telegram_data: {
-                    user: tg.initDataUnsafe?.user || {},
-                    chat: tg.initDataUnsafe?.chat || {}
-                }
-            };
-
-            try {
-                actionBtn.disabled = true;
-                actionBtn.textContent = 'Отправка...';
-                isRegenerating = true;
-
-                console.log('Отправка данных:', payload);
-
-                const response = await fetch('https://fignetic-n8n.ru/webhook/bb855bc5-ff94-4a4e-ad53-56f9497610f8', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                console.log('Ответ сервера:', result);
-
-                // Показываем лоадеры на выбранных карточках
-                characterIds.forEach(charId => {
-                    showLoader(charId);
-                    const card = document.getElementById(`char-${charId}`);
-                    if (card) {
-                        card.classList.remove('selected');
-                    }
-                });
-
-                document.getElementById('subtitle').textContent = `Генерируем ${characterIds.length} персонажей...`;
-                updateButton();
-
-                // Запускаем polling для отслеживания прогресса
-                startPolling(characterIds);
-
-            } catch (error) {
-                console.error('Ошибка отправки:', error);
-                tg.showAlert(`Ошибка: ${error.message}`);
-                actionBtn.disabled = false;
-                isRegenerating = false;
-                updateButton();
-            }
-        });
-
-        // Очищаем polling при закрытии
-        window.addEventListener('beforeunload', stopPolling);
-
-        loadCharacters();
+        loadCovers();
     </script>
 </body>
 </html>
