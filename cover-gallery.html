@@ -262,7 +262,7 @@
         tg.BackButton.show();
         tg.BackButton.onClick(() => tg.close());
 
-        const API_BASE = 'https://n8n.fignetic.ru/webhook';
+        const API_BASE = 'https://fignetic-n8n.ru/webhook';
         const GET_COVERS_URL = `${API_BASE}/c535da09-89bc-4090-97ce-ac693bdc40e3`;
         const SELECT_COVER_URL = `${API_BASE}/ccd382e4-7bac-4694-b9a6-1c26782d3ff7`;
         
@@ -368,7 +368,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    tg.showAlert('✅ Обложка выбрана! Книга готова.', () => {
+                    tg.showAlert('✅ Обложка выбрана!', () => {
                         tg.close();
                     });
                 } else {
